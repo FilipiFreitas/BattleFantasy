@@ -1,0 +1,72 @@
+{
+  "id": "azurath_dragon_sovereign",
+  "display_name": "AZURATH — Dragon Sovereign",
+  "fighter_type": "DRAGON",
+  "rarity": "MYTHIC",
+  "portrait_path": "res://assets/cards/fighters/azurath.png",
+  "hp_max": 3200,
+  "atk_f": 340,
+  "def_f": 280,
+  "atk_s": 310,
+  "def_s": 260,
+  "agi": 195,
+  "skills": [
+    {
+      "id": "azurath_basic",
+      "name": "Dragon Claw",
+      "pt_cost": 0,
+      "cd": 0,
+      "damage_type": "PHYSICAL",
+      "power": 1.0,
+      "aoe": "SINGLE",
+      "status": {}
+    },
+    {
+      "id": "azurath_dragon_breath",
+      "name": "Dragon Breath",
+      "pt_cost": 2,
+      "cd": 2,
+      "damage_type": "SPECIAL",
+      "power": 1.8,
+      "aoe": "SINGLE",
+      "status": { "type": "BURN", "turns": 2, "value": 90 }
+    },
+    {
+      "id": "azurath_ancient_roar",
+      "name": "Ancient Roar",
+      "pt_cost": 3,
+      "cd": 3,
+      "damage_type": "SPECIAL",
+      "power": 2.0,
+      "aoe": "CROSS",
+      "status": { "type": "FREEZE", "turns": 1, "value": 0 }
+    },
+    {
+      "id": "azurath_sovereign_wrath",
+      "name": "Sovereign's Wrath",
+      "pt_cost": 4,
+      "cd": 5,
+      "damage_type": "SPECIAL",
+      "power": 3.5,
+      "aoe": "TOTAL",
+      "status": { "type": "BURN", "turns": 3, "value": 150 }
+    }
+  ],
+  "passive": {
+    "id": "azurath_dragon_aura",
+    "description": "Todos os aliados recebem +10% ATK S enquanto Azurath estiver vivo.",
+    "effect_type": "TEAM_BUFF",
+    "stat": "atk_s",
+    "value": 0.10
+  },
+  "leadership": {
+    "id": "azurath_sovereign_presence",
+    "description": "Quando na posição de Líder, todos os aliados recebem +15% ATK e imunidade a Congelar.",
+    "effect_type": "TEAM_LEADERSHIP",
+    "bonuses": [
+      { "stat": "atk_f", "value": 0.15 },
+      { "stat": "atk_s", "value": 0.15 },
+      { "immunity": "FREEZE" }
+    ]
+  }
+}

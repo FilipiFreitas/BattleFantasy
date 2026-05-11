@@ -1,0 +1,47 @@
+{
+  "id": "ignis_flame_vanguard",
+  "display_name": "IGNIS — Flame Vanguard",
+  "fighter_type": "FIRE",
+  "rarity": "RARE",
+  "portrait_path": "res://assets/cards/fighters/ignis.png",
+  "hp_max": 1840,
+  "atk_f": 210,
+  "def_f": 155,
+  "atk_s": 90,
+  "def_s": 80,
+  "agi": 130,
+  "skills": [
+    {
+      "id": "ignis_basic",
+      "name": "Ember Slash",
+      "pt_cost": 0,
+      "cd": 0,
+      "damage_type": "PHYSICAL",
+      "power": 1.0,
+      "aoe": "SINGLE",
+      "status": {}
+    },
+    {
+      "id": "ignis_flame_wave",
+      "name": "Flame Wave",
+      "pt_cost": 2,
+      "cd": 3,
+      "damage_type": "SPECIAL",
+      "power": 1.6,
+      "aoe": "SINGLE",
+      "status": { "type": "BURN", "turns": 2, "value": 55 }
+    },
+    {
+      "id": "ignis_inferno",
+      "name": "Inferno Burst",
+      "pt_cost": 3,
+      "cd": 4,
+      "damage_type": "SPECIAL",
+      "power": 2.2,
+      "aoe": "LINE",
+      "status": { "type": "BURN", "turns": 3, "value": 80 }
+    }
+  ],
+  "passive": {},
+  "leadership": {}
+}

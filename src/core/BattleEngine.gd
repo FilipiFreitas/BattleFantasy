@@ -70,9 +70,8 @@ func _ready() -> void:
 	# Conecta sinais do PTManager para retransmitir à UI
 	pt_manager.pt_changed.connect(func(c, m): emit_signal("pt_updated", c, m))
 
-	# Auto-inicia batalha de teste após 1 frame (aguarda HUD ficar pronto)
-	await get_tree().process_frame
-	_auto_start_test()
+	# O BattleCoordinator agora cuida do início.
+	# _auto_start_test()
 
 func _auto_start_test() -> void:
 	var hud = get_node_or_null("HUD") as BattleHUD
@@ -118,21 +117,31 @@ func _make_fighter(id: String, f_name: String, type: String, rarity: String,
 	return fighter
 
 func _make_test_player_team() -> Array:
-	return [
-		_make_fighter("ignis","IGNIS","FIRE","RARE", 1840,210,155,90,80,130,
+	var ignis = _make_fighter("ignis","IGNIS","FIRE","RARE", 1840,210,155,90,80,130,
 			[{"id":"ignis_basic","name":"Ember Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"ignis_flame_wave","name":"Flame Wave","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.6,"aoe":"SINGLE","status":{"type":"BURN","turns":2,"value":55}},
-			 {"id":"ignis_inferno","name":"Inferno Burst","pt_cost":3,"cd":4,"damage_type":"SPECIAL","power":2.2,"aoe":"TOTAL","status":{"type":"BURN","turns":3,"value":80}}]),
+			 {"id":"ignis_inferno","name":"Inferno Burst","pt_cost":3,"cd":4,"damage_type":"SPECIAL","power":2.2,"aoe":"TOTAL","status":{"type":"BURN","turns":3,"value":80}}])
+	ignis.level = 25
+	ignis.stars = 3
+	ignis.rank_type = "S"
+
+	var aether = _make_fighter("aetherion","AETHERION","LIGHT","MYTHIC", 3200,340,280,310,260,195,
+			[{"id":"aetherion_basic","name":"Divine Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
+			 {"id":"aetherion_flare","name":"Solar Flare","pt_cost":2,"cd":2,"damage_type":"SPECIAL","power":1.8,"aoe":"SINGLE","status":{"type":"BURN","turns":2,"value":90}},
+			 {"id":"aetherion_wrath","name":"Sovereign Wrath","pt_cost":4,"cd":5,"damage_type":"SPECIAL","power":3.5,"aoe":"TOTAL","status":{"type":"BURN","turns":3,"value":150}}])
+	aether.level = 45
+	aether.stars = 5
+	aether.rank_type = "SSS"
+	
+	return [
 		_make_fighter("kael","KAEL","THUNDER","RARE", 1560,180,130,220,160,155,
 			[{"id":"kael_basic","name":"Spark Punch","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"kael_thunder","name":"Thunder Bolt","pt_cost":2,"cd":2,"damage_type":"SPECIAL","power":1.5,"aoe":"SINGLE","status":{"type":"OVERLOAD","turns":0,"value":0}}]),
 		_make_fighter("sapphira","SAPPHIRA","WATER","RARE", 1700,130,160,200,190,140,
 			[{"id":"sapphira_basic","name":"Water Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"sapphira_wave","name":"Tidal Wave","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.7,"aoe":"LINE","status":{"type":"EXTINGUISH","turns":2,"value":0}}]),
-		_make_fighter("azurath","AZURATH","DRAGON","MYTHIC", 3200,340,280,310,260,195,
-			[{"id":"azurath_basic","name":"Dragon Claw","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
-			 {"id":"azurath_breath","name":"Dragon Breath","pt_cost":2,"cd":2,"damage_type":"SPECIAL","power":1.8,"aoe":"SINGLE","status":{"type":"BURN","turns":2,"value":90}},
-			 {"id":"azurath_wrath","name":"Sovereign Wrath","pt_cost":4,"cd":5,"damage_type":"SPECIAL","power":3.5,"aoe":"TOTAL","status":{"type":"BURN","turns":3,"value":150}}]),
+		aether,
+		ignis
 	]
 
 func _make_test_enemy_team() -> Array:
@@ -216,28 +225,44 @@ func start_battle() -> void:
 func _begin_next_turn() -> void:
 	global_turn_counter += 1
 
+	print("=== NOVO TURNO (Turno %d) ===" % global_turn_counter)
+	print("State anterior: ", state)
+
 	# Verifica condição de vitória antes do turno
 	if _check_battle_end():
+		print("Batalha já encerrou, ignorando turno.")
 		return
 
 	var active = turn_queue.get_active_fighter()
 	if active == null:
+		print("ERRO: Fighter ativo nulo na fila de turnos!")
 		return
 
+	print("Fighter ativo: ", active.display_name, " | Player? ", player_fighters.has(active))
+
 	if not active.is_alive:
+		print("Fighter ", active.display_name, " morto. Pulando...")
 		_advance_turn()
 		return
 
 	# PT refresh (apenas no turno do jogador por enquanto; inimigo tem lógica própria)
 	var is_player_turn = player_fighters.has(active)
 	if is_player_turn:
-		pt_manager.on_turn_start(global_turn_counter)
-		_draw_card()
-		state = BattleState.PLAYER_TURN
+		_start_player_turn(active)
 	else:
-		state = BattleState.ENEMY_TURN
+		_start_enemy_turn(active)
 
-	emit_signal("turn_started", active, is_player_turn)
+func _start_player_turn(fighter: Fighter) -> void:
+	pt_manager.on_turn_start(global_turn_counter)
+	_draw_card()
+	state = BattleState.PLAYER_TURN
+	print("State atualizado para: ", state)
+	emit_signal("turn_started", fighter, true)
+
+func _start_enemy_turn(fighter: Fighter) -> void:
+	state = BattleState.ENEMY_TURN
+	print("State atualizado para: ", state)
+	emit_signal("turn_started", fighter, false)
 
 # ─────────────────────────────────────────
 # AÇÕES DO JOGADOR
@@ -270,8 +295,10 @@ func play_card(card_index: int, target_fighter: Fighter = null) -> bool:
 
 # Lutador (Jogador ou Inimigo) usa uma skill (ou ataque básico)
 func use_skill(skill_id: String, targets: Array) -> bool:
+	print("use_skill chamado: ", skill_id, " | targets: ", targets.size())
 	var active = turn_queue.get_active_fighter()
 	if active == null:
+		print("use_skill falhou: active é nulo!")
 		return false
 		
 	var is_player = player_fighters.has(active)
@@ -279,20 +306,28 @@ func use_skill(skill_id: String, targets: Array) -> bool:
 	# Ataque básico (skill_id = "basic")
 	if skill_id == "basic":
 		_execute_attack(active, targets, {}, _consume_boosts(active) if is_player else 1.0)
+		print("use_skill finalizado. Sucesso? true (basic)")
 		_end_turn()
 		return true
 
 	# Skill específica
 	var skill = active.get_skill_by_id(skill_id)
+	if skill.is_empty():
+		print("use_skill falhou: skill não encontrada!")
+		return false
 	
 	if is_player:
-		if not active.is_skill_available(skill_id, pt_manager.get_current()): return false
+		if not active.is_skill_available(skill_id, pt_manager.get_current()): 
+			print("use_skill falhou: skill indisponível (PT ou CD).")
+			return false
 		pt_manager.spend(skill["pt_cost"])
 		
 	active.activate_cooldown(skill_id)
 
 	var boost_mult = _consume_boosts(active) if is_player else 1.0
 	_execute_attack(active, targets, skill, boost_mult)
+	
+	print("use_skill finalizado. Sucesso? true (special)")
 	_end_turn()
 	return true
 
@@ -327,21 +362,27 @@ func _execute_attack(
 		})
 
 		# Aplica dano
-		target.take_damage(result["damage"])
+		var actual_dmg = target.take_damage(result["damage"])
+		result["damage"] = actual_dmg
+		print("Dano: %s recebeu %d de dano!" % [target.display_name, actual_dmg])
 
 		# Aplica status se vantagem de tipo
 		if not result["triggered_status"].is_empty():
-			target.apply_status(result["triggered_status"])
-			emit_signal("status_applied", target, result["triggered_status"])
+			var status = result["triggered_status"]
+			print("Status: %s foi infligido com %s!" % [target.display_name, status["type"]])
+			target.apply_status(status)
+			emit_signal("status_applied", target, status)
 
 		# Aplica dreno (DARK type)
 		if result["drain_amount"] > 0:
 			attacker.heal(result["drain_amount"])
+			print("Dreno: %s curou %d de HP!" % [attacker.display_name, result["drain_amount"]])
 
 		emit_signal("damage_dealt", attacker, target, result)
 
 		# Verifica morte
 		if not target.is_alive:
+			print("enemy defeated: ", target.display_name)
 			emit_signal("fighter_died", target)
 
 	# Verifica vitória após resolução
@@ -379,6 +420,11 @@ func skip_turn() -> void:
 
 func _end_turn() -> void:
 	var active = turn_queue.get_active_fighter()
+	if not active:
+		print("ERRO em _end_turn: Nenhum fighter ativo. Forçando avanço de turno.")
+		_advance_turn()
+		return
+		
 	var is_player = player_fighters.has(active)
 	
 	if is_player:
@@ -387,8 +433,26 @@ func _end_turn() -> void:
 
 	if active:
 		active.tick_cooldowns()
-		active.tick_status_effects()
+		var status_dmg = active.tick_status_effects()
+		if status_dmg > 0:
+			print("Status Dano: %s sofreu %d de dano por status!" % [active.display_name, status_dmg])
+			var result = {
+				"attacker": active, # ou null
+				"defender": active,
+				"damage": status_dmg,
+				"is_crit": false,
+				"is_effective": false,
+				"is_resisted": false,
+				"type_relation": "NEU"
+			}
+			emit_signal("damage_dealt", active, active, result)
+			if not active.is_alive:
+				print("enemy defeated: ", active.display_name)
+				emit_signal("fighter_died", active)
+				if _check_battle_end():
+					return
 
+	print("Fim do turno de: ", active.display_name)
 	_advance_turn()
 
 func _advance_turn() -> void:
@@ -448,14 +512,17 @@ func _check_battle_end() -> bool:
 
 	if not player_alive and not enemy_alive:
 		state = BattleState.DRAW
+		print("=== FIM DE BATALHA: EMPATE ===")
 		emit_signal("battle_ended", "DRAW")
 		return true
 	elif not player_alive:
 		state = BattleState.DEFEAT
+		print("=== FIM DE BATALHA: DERROTA ===")
 		emit_signal("battle_ended", "DEFEAT")
 		return true
 	elif not enemy_alive:
 		state = BattleState.VICTORY
+		print("=== FIM DE BATALHA: VITÓRIA ===")
 		emit_signal("battle_ended", "VICTORY")
 		return true
 

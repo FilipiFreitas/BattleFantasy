@@ -9,11 +9,11 @@ func _ready() -> void:
 	_start_test_battle()
 
 func _start_test_battle() -> void:
-	var engine: BattleEngine = $"." as BattleEngine
-	var hud: BattleHUD = $HUD as BattleHUD
+	var engine: BattleEngine = get_parent() as BattleEngine
+	var hud: BattleHUD = get_parent().get_node_or_null("HUD") as BattleHUD
 
 	if engine == null or hud == null:
-		push_error("BattleCoordinator: Engine ou HUD não encontrado!")
+		push_error("BattleCoordinator: Engine=%s HUD=%s" % [engine, hud])
 		return
 
 	# ─── Carrega a matriz de tipos ───
@@ -38,13 +38,13 @@ func _start_test_battle() -> void:
 		player_team,
 		enemy_team,
 		test_deck,
-		"1-3-1",   # Formação do jogador
-		"2-1-2",   # Formação do inimigo
+		"1-2-1",
+		"1-2-1",
 		type_matrix
 	)
 
 	# ─── Setup visual da HUD ───
-	hud.setup_battle(player_team, enemy_team, "1-3-1", "2-1-2")
+	hud.setup_battle(player_team, enemy_team, "1-2-1", "1-2-1")
 
 	# ─── Inicia! ───
 	engine.start_battle()
@@ -82,16 +82,7 @@ func _create_test_team_player() -> Array:
 		]
 	))
 
-	# F3 — Frostia (ICE | RARE)
-	fighters.append(_make_fighter("frostia", "FROSTIA", "ICE", "RARE",
-		1480, 150, 140, 195, 170, 120,
-		[
-			{"id":"frostia_basic","name":"Ice Shard","pt_cost":0,"cd":0,"damage_type":"SPECIAL","power":1.0,"aoe":"SINGLE","status":{}},
-			{"id":"frostia_blizzard","name":"Blizzard","pt_cost":3,"cd":3,"damage_type":"SPECIAL","power":1.8,"aoe":"SINGLE","status":{"type":"FREEZE","turns":1,"value":0}},
-		]
-	))
-
-	# F4 — Azurath (DRAGON | MYTHIC) — Posição Base
+	# F4 — Azurath (DRAGON | MYTHIC) — Retaguarda
 	fighters.append(_make_fighter("azurath", "AZURATH", "DRAGON", "MYTHIC",
 		3200, 340, 280, 310, 260, 195,
 		[
@@ -120,11 +111,7 @@ func _create_test_team_enemy() -> Array:
 		[{"id":"psycho_c_basic","name":"Psy Blast","pt_cost":0,"cd":0,"damage_type":"SPECIAL","power":1.0,"aoe":"SINGLE","status":{}},
 		 {"id":"psycho_c_confuse","name":"Confuse","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.2,"aoe":"SINGLE","status":{"type":"CONFUSE","turns":2,"value":0}}]
 	))
-	fighters.append(_make_fighter("grass_d", "SYLVAN", "GRASS", "NORMAL",
-		1500, 170, 130, 150, 130, 145,
-		[{"id":"grass_d_basic","name":"Vine Whip","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}}]
-	))
-	fighters.append(_make_fighter("dark_lord", "DARKLORД", "DARK", "LEGENDARY",
+	fighters.append(_make_fighter("dark_lord", "DARKLORD", "DARK", "LEGENDARY",
 		2600, 280, 220, 300, 240, 170,
 		[{"id":"dark_lord_basic","name":"Death Claw","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 		 {"id":"dark_lord_abyss","name":"Abyss Strike","pt_cost":3,"cd":4,"damage_type":"SPECIAL","power":2.5,"aoe":"CROSS","status":{"type":"DRAIN","turns":0,"value":0.2}}]

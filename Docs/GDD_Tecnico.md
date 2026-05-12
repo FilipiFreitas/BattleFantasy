@@ -199,7 +199,7 @@ CREATE TABLE decks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   player_id UUID REFERENCES players(id),
   name TEXT,
-  formation TEXT,           -- "1-3-1" | "2-1-2" | "1-2-2"
+  formation TEXT,           -- "1-2-1" (Padrão)
   fighters JSONB,           -- Array de 4 fighter_ids com posições
   cards JSONB,              -- Array de até 20 card_ids
   updated_at TIMESTAMPTZ DEFAULT NOW()

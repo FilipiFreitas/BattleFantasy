@@ -62,8 +62,23 @@ func calculate(params: Dictionary) -> Dictionary:
 	# Poder da skill (1.0 = ataque básico)
 	var power: float = skill.get("power", 1.0)
 
-	# DANO BASE
-	var base_damage = max(1, int((atk * power) - def))
+	# DANO BASE (Ataque - Defesa)
+	var raw_damage = (atk * power) - def
+	var min_damage = max(1, int(atk * 0.05)) # Mínimo de 5% do Ataque
+	
+	var base_damage = raw_damage
+	
+	# Se a defesa for superior ao ataque (dano abaixo do mínimo)
+	if raw_damage < min_damage:
+		# Calculamos a "Superioridade" da defesa
+		var ratio = float(def) / max(1.0, float(atk * power))
+		# Chance de Erro Crítico (1 de dano) escala até 35%
+		var error_chance = clamp((ratio - 1.0) * 0.5, 0.0, 0.35)
+		
+		if randf() < error_chance:
+			base_damage = 1
+		else:
+			base_damage = min_damage
 
 	# MULTIPLICADOR DE TIPO
 	var type_relation = _get_type_relation(attacker.fighter_type, defender.fighter_type)

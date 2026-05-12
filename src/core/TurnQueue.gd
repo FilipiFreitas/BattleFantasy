@@ -94,3 +94,14 @@ func get_round_number() -> int:
 
 func get_remaining_in_round() -> int:
 	return _queue.size() - _current_index
+
+# Retorna os próximos N lutadores na ordem (incluindo o atual)
+func get_upcoming(count: int) -> Array:
+	var upcoming = []
+	var size = _queue.size()
+	if size == 0: return upcoming
+	
+	for i in range(count):
+		var idx = (_current_index + i) % size
+		upcoming.append(_queue[idx])
+	return upcoming

@@ -14,15 +14,21 @@ config/name="BattleFantasy"
 config/description="Card-RPG turn-based strategy game with anime art style"
 config/version="0.1.0"
 config/tags=PackedStringArray("card", "rpg", "turn-based")
-run/main_scene="res://src/scenes/Battle/BattleScreen.tscn"
+run/main_scene="res://src/scenes/MainMenu.tscn"
 config/features=PackedStringArray("4.6")
-config/icon="res://assets/ui/icon.png"
+
+[autoload]
+
+SettingsManager="*res://src/core/SettingsManager.gd"
 
 [display]
 
-window/size/viewport_width=390
-window/size/viewport_height=844
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/size/window_width_override=450
+window/size/window_height_override=800
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/handheld/orientation=1
 
 [input]

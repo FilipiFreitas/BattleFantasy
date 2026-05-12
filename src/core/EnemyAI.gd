@@ -32,7 +32,10 @@ func _take_turn(fighter: Fighter, alive_players: Array) -> void:
 	var skill_id = _choose_skill(fighter)
 	
 	# Execute
-	if not engine.use_skill(skill_id, [target]):
+	if engine.use_skill(skill_id, [target]):
+		# Delay extra após o ataque para o jogador ver o efeito e respirar
+		await get_tree().create_timer(1.5).timeout
+	else:
 		engine.skip_turn()
 
 func _choose_target(alive_players: Array) -> Fighter:

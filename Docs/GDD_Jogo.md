@@ -8,7 +8,7 @@
 
 ## 1. Conceito do Jogo
 
-**BattleFantasy** é um Card-RPG por turnos onde dois jogadores enfrentam um ao outro (PvP) ou desafiam estágios de campanha (PvE) com times de **5 lutadores** e decks de **50 cartas de suporte**.
+**BattleFantasy** é um Card-RPG por turnos onde dois jogadores enfrentam um ao outro (PvP) ou desafiam estágios de campanha (PvE) com times de **4 lutadores** e decks de **20 cartas de suporte** (selecionadas de uma coleção de 100 cartas).
 
 ### Pilares de Design
 
@@ -79,8 +79,19 @@ Efeito permanente durante toda a batalha, independente de posição.
 - Multiplicador de vantagem: **×1.5 dano + efeito especial**
 - Multiplicador neutro: **×1.0 dano**
 - Multiplicador de desvantagem: **×0.7 dano**
-- Um lutador pode ter apenas **1 tipo**
+- Um lutador pode ter apenas 1 tipo
 - Cartas de Boost com tipo específico dão bônus adicional ao amplificar lutadores do mesmo tipo
+
+### 4.1 Cálculo de Dano
+O dano é calculado com base no **Ataque (Físico ou Especial)** do atacante menos a **Defesa** correspondente do defensor.
+
+**Fórmula Base:** `(Atk × Poder da Skill) - Defesa`
+
+**Regras de Resolução:**
+1.  **Dano Mínimo Garantido:** O dano base nunca será inferior a **5% do Ataque** do lutador.
+2.  **Mecânica de "Erro Crítico":** Se a Defesa for superior ao ataque (levando o dano para o mínimo), há uma chance de o golpe ser inefetivo, resultando em apenas **1 de dano**.
+	*   A chance de erro escala conforme a superioridade da Defesa, até o máximo de **35%**.
+3.  **Multiplicadores Finais:** Após o cálculo base, aplicam-se os multiplicadores de **Vantagem de Tipo**, **Bônus de Formação** e **Cartas de Boost**.
 
 ---
 
@@ -88,52 +99,29 @@ Efeito permanente durante toda a batalha, independente de posição.
 
 O jogador escolhe a formação **antes de cada batalha**. A formação é revelada ao oponente no início da partida (criando meta-jogo de contra-formação).
 
-### Diagrama das Formações
+### Diagrama das Formações (Padrão 1-2-1)
 
 ```
-FORMAÇÃO 1-3-1           FORMAÇÃO 2-1-2           FORMAÇÃO 1-2-2
-                                                   
-     [ F3 ]                  [ F4 ] [ F5 ]              [ F4 ] [ F5 ]
-[ F2 ][ F1 ][ F4 ]       [ F2 ][ F1 ][ F2 ]        [ F2 ][ F3 ]
-     [ F5 ]               [ F3 ][ F4 ]              [ F1 ]
-  (Ponta - Centro - Base)  (Frente - Centro - Fundo)  (Vanguarda - Mid - Rear)
+	  [ F4 ]          (Retaguarda / Suporte)
+   [ F2 ][ F3 ]       (Meio / Ofensiva)
+	  [ F1 ]          (Vanguarda / Líder)
 ```
 
-### Bônus por Formação
+### Bônus por Formação (1-2-1)
 
-#### 1-3-1 (Ofensiva Balanceada)
 | Posição | Bônus |
 |:---|:---|
-| **Ponta (F1 — Líder)** | Ativa Liderança de Míticas. -15% dano recebido por aliados enquanto vivo. |
-| **Centro Esquerdo (F2)** | +5% ATK F e ATK S |
-| **Centro Meio (F3)** | +10% ATK F e ATK S |
-| **Centro Direito (F4)** | +5% ATK F e ATK S |
-| **Base (F5)** | +10% AGI (age antes naquela rodada) |
-
-#### 2-1-2 (Tanque + Snipers)
-| Posição | Bônus |
-|:---|:---|
-| **Frente Esq (F1)** | -10% dano físico recebido |
-| **Frente Dir (F2)** | -10% dano físico recebido |
-| **Centro (F3 — Líder)** | Ativa Liderança. +5% ATK para toda equipe. |
-| **Fundo Esq (F4)** | +20% ATK S (sniper mágico) |
-| **Fundo Dir (F5)** | +20% ATK S (sniper mágico) |
-
-#### 1-2-2 (Mages e Especiais)
-| Posição | Bônus |
-|:---|:---|
-| **Vanguarda (F1 — Líder)** | Ativa Liderança. Enquanto vivo: aliados recebem -25% dano. |
-| **Mid Esq (F2)** | +10% AGI |
-| **Mid Dir (F3)** | +10% AGI |
-| **Rear Esq (F4)** | +15% ATK S. Se Vanguarda cair → vira alvo prioritário. |
-| **Rear Dir (F5)** | +15% ATK S. Se Vanguarda cair → vira alvo prioritário. |
+| **Vanguarda (F1 — Líder)** | Ativa Liderança. -20% dano recebido. |
+| **Meio Esq (F2)** | +10% ATK F |
+| **Meio Dir (F3)** | +10% ATK S |
+| **Retaguarda (F4)** | +15% AGI |
 
 ---
 
 ## 6. Sistema de Turnos
 
 ### Ordem de Ação (TurnQueue)
-- No início de cada **rodada**, todos os 10 lutadores ativos (5 por time) são ordenados por **AGI** (decrescente)
+- No início de cada **rodada**, todos os 8 lutadores ativos (4 por time) são ordenados por **AGI** (decrescente)
 - O lutador com maior AGI age primeiro
 - Em caso de empate, desempate por: posição de formação > time do jogador 1
 - A fila é **recalculada** a cada nova rodada (efeitos de Gelo/debuffs de AGI impactam a ordem)
@@ -142,7 +130,7 @@ FORMAÇÃO 1-3-1           FORMAÇÃO 2-1-2           FORMAÇÃO 1-2-2
 ```
 FILA DE TURNOS (exemplo):
 [ Ignis 130 ] [ Azurath 195 ] [ Opp_A 145 ] [ Kai 110 ] [ Opp_B 155 ] ...
-     ↑ ATIVO
+	 ↑ ATIVO
 ```
 
 ---
@@ -171,11 +159,11 @@ FILA DE TURNOS (exemplo):
 ### Visão Geral
 
 ```
-DECK: 50 cartas  →  MÃO: máx. 5 cartas  →  CAMPO: descarta após uso
+DECK EQUIPADO: 20 cartas  →  COLEÇÃO: 100 cartas  →  MÃO: máx. 5 cartas
 ```
 
 **Mecânica da mão:**
-- Começa a batalha com **5 cartas** na mão
+- Começa a batalha com **3 cartas** na mão (mão inicial reduzida pelo deck menor)
 - A cada novo turno compra **1 carta** do deck (se mão < 5)
 - Se a mão já tiver 5 cartas, **não compra** naquele turno
 - Se o deck acabar, **não há penalidade** — simplesmente não compra mais
@@ -311,7 +299,8 @@ Cartas de campo **alteram o cenário global** por N turnos. Afetam **ambos os ti
 
 | Regra | Detalhe |
 |:---|:---|
-| **Tamanho do deck** | 50 cartas fixo |
+| **Tamanho do deck equipado** | 20 cartas fixo |
+| **Total da Coleção** | 100 cartas |
 | **Cópias permitidas** | Máximo 3 cópias da mesma carta |
 | **Composição livre** | Mix de Boost, Heal e Equipamento à escolha |
 | **Expansão do deck** | Possível via itens especiais (ex: "Slot Extra") |
@@ -321,7 +310,7 @@ Cartas de campo **alteram o cenário global** por N turnos. Afetam **ambos os ti
 
 | Regra | Detalhe |
 |:---|:---|
-| **Lutadores por time** | 5 (fixo) |
+| **Lutadores por time** | 4 (fixo) |
 | **Formação** | Escolhida antes de cada batalha |
 | **Mesmo lutador** | Apenas 1 cópia por time |
 

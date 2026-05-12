@@ -12,6 +12,9 @@ extends Resource
 @export var fighter_type: String = ""   # "FIRE" | "WATER" | "DRAGON" | etc.
 @export var rarity: String = "NORMAL"   # "NORMAL" | "RARE" | "LEGENDARY" | "MYTHIC"
 @export var portrait_path: String = ""  # Caminho para sprite da carta
+@export var level: int = 1
+@export var stars: int = 1               # 1 a 6 estrelas
+@export var rank_type: String = "D"      # D, C, B, A, S, SS, SSS
 
 # ─────────────────────────────────────────
 # ATRIBUTOS BASE
@@ -150,20 +153,26 @@ func tick_cooldowns() -> void:
 		if cooldowns[skill_id] > 0:
 			cooldowns[skill_id] -= 1
 
-func tick_status_effects() -> Array:
+func tick_status_effects() -> int:
 	var expired = []
-	var damage_from_burn = 0
+	var damage_from_status = 0
 	for effect in status_effects:
-		if effect["type"] == "BURN":
-			damage_from_burn += effect["value"]
+		if effect["turns"] > 0:
+			if effect["type"] == "BURN":
+				damage_from_status += effect["value"]
+			elif effect["type"] == "POISON":
+				damage_from_status += int(hp_max * effect.get("value", 0.0))
 		effect["turns"] -= 1
 		if effect["turns"] <= 0:
 			expired.append(effect)
 	for e in expired:
 		status_effects.erase(e)
-	if damage_from_burn > 0:
-		take_damage(damage_from_burn)
-	return expired
+		
+	var actual_dmg = 0
+	if damage_from_status > 0:
+		actual_dmg = take_damage(damage_from_status)
+		
+	return actual_dmg
 
 func apply_status(effect: Dictionary) -> void:
 	# Evita duplicata do mesmo tipo (atualiza se já existe)

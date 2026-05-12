@@ -1,2 +1,1 @@
-res://src/core/BattleEngine.gd
-res://src/core/EnemyAI.gd
+res://src/ui/BattleHUD.gd

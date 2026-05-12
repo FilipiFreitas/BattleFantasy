@@ -1,0 +1,81 @@
+[{RARITY}] = SSS
+[{ELEMENT}] = Light
+[{CHARACTER_NAME}] = Aetherion
+[{LEVEL}] = 45
+[{HP_VALUE}] = 14280
+[{ATK_VALUE}] = 1240
+
+[{CHARACTER_DESCRIPTION}] =
+divine holy warrior king, majestic celestial armor, white and gold royal armor with glowing engravings, long radiant white hair, glowing golden eyes, angelic presence, elegant cape flowing in the wind, floating slightly above the ground, massive holy energy surrounding the body, hands emitting sacred light, calm but overwhelmingly powerful expression, divine aura, celestial particles orbiting around him, legendary hero appearance, ultra detailed fantasy anime style
+
+Ultra detailed fantasy mobile RPG card, vertical collectible card design, premium gacha game style, centered character portrait, cinematic fantasy lighting, highly polished UI, dark background, professional trading card layout.
+
+ELEMENT SYSTEM:
+The ENTIRE visual identity of the card is based on the Light element.
+
+Light element palette:
+gold,
+holy white,
+soft yellow glow,
+celestial particles,
+divine energy,
+sacred light rays,
+holy mist,
+radiant aura.
+
+RARITY SYSTEM:
+SSS rarity,
+overwhelming divine aura,
+legendary celestial storm around the card,
+multiple layers of glowing holy energy,
+massive aura escaping outside the frame,
+floating particles,
+light distortions,
+god-tier presence.
+
+CARD FRAME:
+ornate fantasy frame,
+gold and white glowing border,
+premium celestial metallic details,
+thick holy neon rim light,
+legendary collectible feeling,
+symmetric layout,
+AAA mobile game UI quality.
+
+BACKGROUND:
+dark cinematic background contrasted with intense holy light,
+heavenly atmosphere,
+light rays,
+floating sacred particles,
+ethereal glow,
+soft bloom lighting,
+divine energy storm.
+
+TOP UI:
+holy light icon on top-left,
+SSS rarity badge on top-right.
+
+BOTTOM UI:
+5 gold stars,
+"Aetherion - Lv 45",
+gold/white HP bar,
+HP stat,
+ATK stat,
+clean fantasy typography.
+
+STYLE:
+AAA mobile game,
+ultra detailed,
+masterpiece,
+sharp focus,
+8k,
+high contrast,
+premium collectible card aesthetic,
+professional fantasy splash art,
+same exact card template,
+same UI proportions,
+same border structure,
+same visual identity across the full card set.
+
+NEGATIVE PROMPT:
+low quality, blurry, bad anatomy, deformed hands, unreadable text, cropped card, weak glow, flat lighting, asymmetrical frame, ugly UI, watermark, logo, messy composition

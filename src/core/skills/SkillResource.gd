@@ -4,17 +4,19 @@ extends Resource
 
 @export var skill_name: String = "New Skill"
 @export var icon: Texture2D
-@export var description: String = ""
+@export_multiline var description: String = ""
+@export var pt_cost: int = 0
+@export var cooldown: int = 0
 
 ## Componentes LEGO
 @export var targeter: BaseTargeter
 @export var effects: Array[BaseEffect] = []
 
 ## Sinal para o sistema de VFX global (Rule 7)
-signal skill_activated(user: Fighter, targets: Array)
+signal skill_activated(user, targets: Array)
 
 ## Executa o pipeline da habilidade (Rule 12)
-func activate(user: Fighter, all_fighters: Array, selected_target: Fighter = null):
+func activate(user, all_fighters: Array, selected_target = null):
 	if not targeter: 
 		printerr("Skill %s sem Targeter!" % skill_name)
 		return
@@ -28,4 +30,4 @@ func activate(user: Fighter, all_fighters: Array, selected_target: Fighter = nul
 		for effect in effects:
 			effect.execute(user, target)
 	
-	print("Skill %s finalizada por %s" % [skill_name, user.name])
+	print("Skill %s finalizada por %s" % [skill_name, user.display_name])

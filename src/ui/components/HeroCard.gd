@@ -5,15 +5,15 @@ extends Control
 const CARD_W = 120
 const CARD_H = 180
 
-var _fighter: Fighter
+var _character
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(CARD_W, CARD_H)
 	size = Vector2(CARD_W, CARD_H)
 	_build_fallback_ui()
 
-func setup(f: Fighter) -> void:
-	_fighter = f
+func setup(f) -> void:
+	_character = f
 	_build_fallback_ui()
 
 func _build_fallback_ui() -> void:
@@ -36,9 +36,9 @@ func _build_fallback_ui() -> void:
 	add_child(border)
 	
 	# Nome do Herói
-	if _fighter:
+	if _character:
 		var lbl = Label.new()
-		lbl.text = _fighter.display_name
+		lbl.text = _character.display_name
 		lbl.position = Vector2(0, CARD_H - 40)
 		lbl.size = Vector2(CARD_W, 20)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -50,7 +50,7 @@ func _build_fallback_ui() -> void:
 		
 		# Tipo do elemento (topo)
 		var type_lbl = Label.new()
-		type_lbl.text = _fighter.fighter_type
+		type_lbl.text = _character.fighter_type
 		type_lbl.position = Vector2(4, 4)
 		type_lbl.add_theme_font_size_override("font_size", 10)
 		type_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -59,8 +59,8 @@ func _build_fallback_ui() -> void:
 		add_child(type_lbl)
 
 func _get_element_color() -> Color:
-	if not _fighter: return Color(0.2, 0.2, 0.2)
-	match _fighter.fighter_type.to_upper():
+	if not _character: return Color(0.2, 0.2, 0.2)
+	match _character.fighter_type.to_upper():
 		"FIRE": return Color(0.8, 0.2, 0.1)
 		"WATER": return Color(0.1, 0.4, 0.8)
 		"THUNDER": return Color(0.5, 0.3, 0.8)
@@ -71,5 +71,5 @@ func _get_element_color() -> Color:
 		"GRASS": return Color(0.2, 0.6, 0.2)
 		"PSYCHIC": return Color(0.7, 0.3, 0.6)
 		"STONE": return Color(0.5, 0.4, 0.3)
-		"FIGHTER": return Color(0.6, 0.2, 0.2)
+		"PHYSICAL": return Color(0.6, 0.2, 0.2)
 		_: return Color(0.3, 0.3, 0.3)

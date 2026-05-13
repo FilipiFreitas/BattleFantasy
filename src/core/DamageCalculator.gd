@@ -38,15 +38,15 @@ func initialize(matrix_data: Dictionary) -> void:
 # ─────────────────────────────────────────
 func calculate(params: Dictionary) -> Dictionary:
 	# params = {
-	#   "attacker": Fighter,
-	#   "defender": Fighter,
+	#   "attacker": unit,
+	#   "defender": unit,
 	#   "skill": Dictionary,          # skill usada (ou {} para ataque básico)
 	#   "boost_multiplier": float,    # 1.0 se sem boost
 	#   "formation_bonus": float,     # multiplicador da posição na formação
 	# }
 
-	var attacker: Fighter = params["attacker"]
-	var defender: Fighter = params["defender"]
+	var attacker = params["attacker"]
+	var defender = params["defender"]
 	var skill: Dictionary = params.get("skill", {})
 	var boost_mult: float = params.get("boost_multiplier", 1.0)
 	var formation_bonus: float = params.get("formation_bonus", 1.0)
@@ -81,14 +81,14 @@ func calculate(params: Dictionary) -> Dictionary:
 			base_damage = min_damage
 
 	# MULTIPLICADOR DE TIPO
-	var type_relation = _get_type_relation(attacker.fighter_type, defender.fighter_type)
+	var type_relation = _get_type_relation(attacker.Character_type, defender.Character_type)
 	var type_mult = TYPE_NEUTRAL
 	var triggered_effect: Dictionary = {}
 
 	match type_relation:
 		"ADV":
 			type_mult = TYPE_ADVANTAGE
-			triggered_effect = _type_effects.get(attacker.fighter_type, {})
+			triggered_effect = _type_effects.get(attacker.Character_type, {})
 		"WEK":
 			type_mult = TYPE_WEAKNESS
 		_:
@@ -100,7 +100,7 @@ func calculate(params: Dictionary) -> Dictionary:
 
 	# DRENO: atacante recupera 20% do dano se tipo DARK com vantagem
 	var drain_amount = 0
-	if type_relation == "ADV" and attacker.fighter_type == "DARK":
+	if type_relation == "ADV" and attacker.Character_type == "DARK":
 		drain_amount = int(final_damage * 0.20)
 
 	return {
@@ -117,13 +117,13 @@ func calculate(params: Dictionary) -> Dictionary:
 # ─────────────────────────────────────────
 # CURA
 # ─────────────────────────────────────────
-func calculate_heal(card: Card, _target: Fighter) -> int:
+func calculate_heal(card, _target) -> int:
 	return card.heal_value
 
 # ─────────────────────────────────────────
 # AUXILIARES
 # ─────────────────────────────────────────
-func _get_type_relation(attacker_type: String, defender_type: String) -> String:
+func _get_type_relation(attacker_type, defender_type) -> String:
 	if _type_matrix.is_empty():
 		return "NEU"
 	var attacker_row = _type_matrix.get(attacker_type, {})

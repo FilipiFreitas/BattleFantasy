@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Character" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/fire/Ember.tres" id="1_basic"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+id = "goblin_shaman"
+display_name = "Goblin Shaman"
+fighter_type = "FIRE"
+rarity = "NORMAL"
+portrait_path = "res://assets/cards/enemies/goblin_shaman.png"
+level = 15
+stars = 2
+rank_type = "B"
+hp_max_base = 800
+atk_f_base = 60
+def_f_base = 80
+atk_s_base = 200
+def_s_base = 150
+agi_base = 120
+basic_attack = ExtResource("1_basic")

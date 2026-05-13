@@ -3,9 +3,9 @@ class_name DamageEffect
 extends BaseEffect
 
 @export var damage_value: int = 10
-@export var element: String = "physical" # Rule 5: Tags/Elementos ao invés de IFs
+@export_enum("physical", "fire", "water", "wind", "earth", "thunder", "light", "dark") var element: String = "physical"
 
-func execute(user: Fighter, target: Fighter):
+func execute(user, target):
 	# Aqui entrariam cálculos de defesa, buffs, etc. (Rule 4: DamageSystem)
 	# Por enquanto, aplicação direta para validar a estrutura.
 	var final_dmg = damage_value 

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Character" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/physical/BasicStrike.tres" id="1_basic"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+id = "goblin_fighter"
+display_name = "Goblin Lutador"
+fighter_type = "EARTH"
+rarity = "NORMAL"
+portrait_path = "res://assets/cards/enemies/goblin_fighter.png"
+level = 10
+stars = 2
+rank_type = "C"
+hp_max_base = 650
+atk_f_base = 120
+def_f_base = 90
+atk_s_base = 40
+def_s_base = 60
+agi_base = 110
+basic_attack = ExtResource("1_basic")

@@ -53,10 +53,10 @@ func _start_test_battle() -> void:
 # FÁBRICAS DE DADOS DE TESTE
 # ─────────────────────────────────────────
 func _create_test_team_player() -> Array:
-	var fighters = []
+	var Characters = []
 
 	# F0 — Ignis (FIRE | RARE) — Posição Líder
-	fighters.append(_make_fighter("ignis", "IGNIS", "FIRE", "RARE",
+	Characters.append(_make_Character("ignis", "IGNIS", "FIRE", "RARE",
 		1840, 210, 155, 90, 80, 130,
 		[
 			{"id":"ignis_basic","name":"Ember Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
@@ -65,7 +65,7 @@ func _create_test_team_player() -> Array:
 	))
 
 	# F1 — Kael (THUNDER | RARE)
-	fighters.append(_make_fighter("kael", "KAEL", "THUNDER", "RARE",
+	Characters.append(_make_Character("kael", "KAEL", "THUNDER", "RARE",
 		1560, 180, 130, 220, 160, 155,
 		[
 			{"id":"kael_basic","name":"Spark Punch","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
@@ -74,7 +74,7 @@ func _create_test_team_player() -> Array:
 	))
 
 	# F2 — Sapphira (WATER | RARE)
-	fighters.append(_make_fighter("sapphira", "SAPPHIRA", "WATER", "RARE",
+	Characters.append(_make_Character("sapphira", "SAPPHIRA", "WATER", "RARE",
 		1700, 130, 160, 200, 190, 140,
 		[
 			{"id":"sapphira_basic","name":"Water Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
@@ -83,7 +83,7 @@ func _create_test_team_player() -> Array:
 	))
 
 	# F4 — Azurath (DRAGON | MYTHIC) — Retaguarda
-	fighters.append(_make_fighter("azurath", "AZURATH", "DRAGON", "MYTHIC",
+	Characters.append(_make_Character("azurath", "AZURATH", "DRAGON", "MYTHIC",
 		3200, 340, 280, 310, 260, 195,
 		[
 			{"id":"azurath_basic","name":"Dragon Claw","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
@@ -92,45 +92,45 @@ func _create_test_team_player() -> Array:
 		]
 	))
 
-	return fighters
+	return Characters
 
 func _create_test_team_enemy() -> Array:
-	var fighters = []
+	var Characters = []
 
-	fighters.append(_make_fighter("shadow_a", "SHADOW", "DARK", "RARE",
+	Characters.append(_make_Character("shadow_a", "SHADOW", "DARK", "RARE",
 		1600, 190, 140, 210, 150, 125,
 		[{"id":"shadow_a_basic","name":"Dark Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 		 {"id":"shadow_a_drain","name":"Soul Drain","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.5,"aoe":"SINGLE","status":{"type":"DRAIN","turns":0,"value":0.2}}]
 	))
-	fighters.append(_make_fighter("stone_b", "GOLEM", "STONE", "NORMAL",
+	Characters.append(_make_Character("stone_b", "GOLEM", "STONE", "NORMAL",
 		2200, 160, 230, 80, 200, 70,
 		[{"id":"stone_b_basic","name":"Rock Smash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}}]
 	))
-	fighters.append(_make_fighter("psycho_c", "MINDER", "PSYCHIC", "RARE",
+	Characters.append(_make_Character("psycho_c", "MINDER", "PSYCHIC", "RARE",
 		1400, 100, 110, 240, 180, 160,
 		[{"id":"psycho_c_basic","name":"Psy Blast","pt_cost":0,"cd":0,"damage_type":"SPECIAL","power":1.0,"aoe":"SINGLE","status":{}},
 		 {"id":"psycho_c_confuse","name":"Confuse","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.2,"aoe":"SINGLE","status":{"type":"CONFUSE","turns":2,"value":0}}]
 	))
-	fighters.append(_make_fighter("dark_lord", "DARKLORD", "DARK", "LEGENDARY",
+	Characters.append(_make_Character("dark_lord", "DARKLORD", "DARK", "LEGENDARY",
 		2600, 280, 220, 300, 240, 170,
 		[{"id":"dark_lord_basic","name":"Death Claw","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 		 {"id":"dark_lord_abyss","name":"Abyss Strike","pt_cost":3,"cd":4,"damage_type":"SPECIAL","power":2.5,"aoe":"CROSS","status":{"type":"DRAIN","turns":0,"value":0.2}}]
 	))
 
-	return fighters
+	return Characters
 
 func _create_test_deck() -> Array:
 	var deck = []
 	# Adiciona cartas de boost de diferentes tipos
 	var card_defs = [
 		{"id":"boost_fire_1","display_name":"Chama Ardente","card_type":"BOOST","pt_cost":2,"rarity":"RARE",
-		 "boost_fighter_type":"FIRE","boost_stat":"DAMAGE","boost_value":1.8,"boost_duration":0,"description":"+80% dano skill de Fogo"},
+		 "boost_Character_type":"FIRE","boost_stat":"DAMAGE","boost_value":1.8,"boost_duration":0,"description":"+80% dano skill de Fogo"},
 		{"id":"boost_any_1","display_name":"Impulso Universal","card_type":"BOOST","pt_cost":1,"rarity":"NORMAL",
-		 "boost_fighter_type":"ANY","boost_stat":"DAMAGE","boost_value":1.3,"boost_duration":0,"description":"+30% dano qualquer skill"},
+		 "boost_Character_type":"ANY","boost_stat":"DAMAGE","boost_value":1.3,"boost_duration":0,"description":"+30% dano qualquer skill"},
 		{"id":"heal_single_1","display_name":"Cura Sagrada","card_type":"HEAL","pt_cost":2,"rarity":"NORMAL",
 		 "heal_value":400,"heal_target":"SINGLE","description":"Restaura 400 HP"},
 		{"id":"boost_dragon_1","display_name":"Poder do Dragão","card_type":"BOOST","pt_cost":2,"rarity":"RARE",
-		 "boost_fighter_type":"DRAGON","boost_stat":"DAMAGE","boost_value":1.7,"boost_duration":0,"description":"+70% dano skill de Dragão"},
+		 "boost_Character_type":"DRAGON","boost_stat":"DAMAGE","boost_value":1.7,"boost_duration":0,"description":"+70% dano skill de Dragão"},
 		{"id":"equip_sword","display_name":"Espada de Dragão","card_type":"EQUIPMENT","pt_cost":2,"rarity":"RARE",
 		 "equip_stat":"atk_f","equip_value":40,"description":"+40 ATK F permanente"},
 		{"id":"heal_all","display_name":"Bênção Total","card_type":"HEAL","pt_cost":3,"rarity":"RARE",
@@ -147,13 +147,13 @@ func _create_test_deck() -> Array:
 # ─────────────────────────────────────────
 # HELPER
 # ─────────────────────────────────────────
-func _make_fighter(id: String, f_name: String, type: String, rarity: String,
+func _make_Character(id: String, f_name: String, type: String, rarity: String,
 	hp: int, atk_f: int, def_f: int, atk_s: int, def_s: int, agi: int,
-	skills: Array) -> Fighter:
-	var f = Fighter.new()
+	skills: Array) -> unit:
+	var f = unit.new()
 	f.id = id
 	f.display_name = f_name
-	f.fighter_type = type
+	f.Character_type = type
 	f.rarity = rarity
 	f.hp_max = hp
 	f.atk_f = atk_f

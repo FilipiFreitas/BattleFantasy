@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Character" load_steps=4 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/physical/BasicStrike.tres" id="1_skill"]
+[ext_resource type="Resource" path="res://data/skills/fire/DragonBreath.tres" id="2_skill"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="3_script"]
+
+[resource]
+script = ExtResource("3_script")
+id = "dragon_lord"
+display_name = "DRAGON LORD"
+fighter_type = "DRAGON"
+rarity = "MYTHIC"
+portrait_path = "res://assets/cards/bosses/dragon_lord.png"
+level = 50
+stars = 6
+rank_type = "SSS"
+hp_max_base = 12000
+atk_f_base = 450
+def_f_base = 350
+atk_s_base = 500
+def_s_base = 400
+agi_base = 180
+skills = [ExtResource("1_skill"), ExtResource("2_skill")]
+passive = {}
+leadership = {}

@@ -26,8 +26,8 @@ var _turn_icons: Array[Panel] = []
 var _pt_gems: Array[Panel] = []
 
 var engine: BattleEngine = null
-var _player_slots: Array[FighterSlotUI] = []
-var _enemy_slots: Array[FighterSlotUI] = []
+var _player_slots: Array = []
+var _enemy_slots: Array = []
 
 const FIELD_H: float = 960.0 # 1280 - 70 (head) - 250 (footer)
 
@@ -284,13 +284,13 @@ func _build_ui() -> void:
 	_player_slots.clear()
 	_enemy_slots.clear()
 	for i in range(4):
-		var s = FighterSlotUI.new()
+		var s = CharacterSlotUI.new()
 		s.visible = false
 		s.clicked.connect(_on_slot_clicked)
 		_slot_layer.add_child(s)
 		_player_slots.append(s)
 	for i in range(4):
-		var s = FighterSlotUI.new()
+		var s = CharacterSlotUI.new()
 		s.visible = false
 		s.clicked.connect(_on_slot_clicked)
 		_slot_layer.add_child(s)
@@ -316,7 +316,7 @@ func connect_to_engine(eng: BattleEngine) -> void:
 	engine.turn_started.connect(_on_turn_started)
 	engine.pt_updated.connect(_on_pt_updated)
 	engine.damage_dealt.connect(_on_damage_dealt)
-	engine.fighter_died.connect(_on_fighter_died)
+	engine.character_died.connect(_on_character_died)
 	engine.battle_ended.connect(_on_battle_ended)
 	engine.round_started.connect(_on_round_started)
 
@@ -325,39 +325,54 @@ func connect_to_engine(eng: BattleEngine) -> void:
 # ─────────────────────────────────────────
 
 func register_skill_signals(skill: SkillResource) -> void:
-	# Desconecta conexões antigas se houver (para evitar duplicatas)
-	if skill.skill_activated.is_connected(_on_modular_skill_activated):
-		skill.skill_activated.disconnect(_on_modular_skill_activated)
-	
-	skill.skill_activated.connect(_on_modular_skill_activated)
+	if skill.skill_activated.is_connected(_on_modular_skill_activated.bind(skill)):
+		skill.skill_activated.disconnect(_on_modular_skill_activated.bind(skill))
+	skill.skill_activated.connect(_on_modular_skill_activated.bind(skill))
 	
 	for effect in skill.effects:
 		if effect is DamageEffect:
 			if effect.effect_applied.is_connected(_on_modular_damage_applied):
 				effect.effect_applied.disconnect(_on_modular_damage_applied)
 			effect.effect_applied.connect(_on_modular_damage_applied)
+		elif effect is HealEffect:
+			if effect.effect_applied.is_connected(_on_modular_heal_applied):
+				effect.effect_applied.disconnect(_on_modular_heal_applied)
+			effect.effect_applied.connect(_on_modular_heal_applied)
+		elif effect is StatusEffect:
+			if effect.effect_applied.is_connected(_on_modular_status_applied):
+				effect.effect_applied.disconnect(_on_modular_status_applied)
+			effect.effect_applied.connect(_on_modular_status_applied)
 
-func _on_modular_skill_activated(user: Fighter, targets: Array) -> void:
-	show_message("%s uses %s!" % [user.display_name, "SKILL"]) # TODO: Pegar nome da skill
+func _on_modular_skill_activated(user, _targets, skill: SkillResource) -> void:
+	show_message("%s uses %s!" % [user.display_name, skill.skill_name])
 
-func _on_modular_damage_applied(target: Fighter, damage: int) -> void:
-	# Reutiliza a lógica visual de dano (projétil + shake)
-	var active = engine.turn_queue.get_active_fighter()
-	_on_damage_dealt(active, target, {"damage": damage, "skill_name": "MODULAR"})
+func _on_modular_damage_applied(target, damage: int) -> void:
+	var active = engine.turn_queue.get_active_Character()
+	_on_damage_dealt(active, target, {"damage": damage, "skill_name": "SKILL"})
+
+func _on_modular_heal_applied(target, heal: int) -> void:
+	show_message("%s healed for %d HP!" % [target.display_name, heal])
+	var slot = _find_slot(target)
+	if slot: slot.refresh() # Atualiza barra de HP verde
+
+func _on_modular_status_applied(target, status: Dictionary) -> void:
+	show_message("%s: %s Applied!" % [target.display_name, status["type"]])
+	var slot = _find_slot(target)
+	if slot: slot.refresh()
 
 # ─────────────────────────────────────────
 # HANDLERS DE SINAIS (LEGACY)
 # ─────────────────────────────────────────
 
-func _on_turn_started(fighter: Fighter, is_player: bool) -> void:
+func _on_turn_started(unit, is_player: bool) -> void:
 	# Atualiza o indicador visual da carta ativa
 	for s in _player_slots + _enemy_slots:
-		if s.fighter:
-			s.set_active_turn_visual(s.fighter == fighter)
+		if s.unit:
+			s.set_active_turn_visual(s.unit == unit)
 
 	if is_player:
-		show_message(fighter.display_name + "'S TURN")
-		_refresh_skills(fighter)
+		show_message(unit.display_name + "'S TURN")
+		_refresh_skills(unit)
 	else:
 		show_message("ENEMY TURN")
 
@@ -366,7 +381,7 @@ func _on_pt_updated(current: int, _max_pt: int) -> void:
 		if i < _pt_gems.size():
 			_pt_gems[i].modulate = Color(0.3, 1.0, 1.0) if i < current else Color(0.3, 0.3, 0.3)
 
-func _on_damage_dealt(atk: Fighter, defender: Fighter, _res: Dictionary) -> void:
+func _on_damage_dealt(atk, defender, _res: Dictionary) -> void:
 	var slot_atk = _find_slot(atk)
 	var slot_def = _find_slot(defender)
 	
@@ -401,9 +416,9 @@ func _on_damage_dealt(atk: Fighter, defender: Fighter, _res: Dictionary) -> void
 		
 	if slot_def: slot_def.refresh()
 
-func _on_fighter_died(fighter: Fighter) -> void:
-	show_message("%s DEFEATED!" % fighter.display_name.to_upper())
-	var slot = _find_slot(fighter)
+func _on_character_died(unit) -> void:
+	show_message("%s DEFEATED!" % unit.display_name.to_upper())
+	var slot = _find_slot(unit)
 	if slot: slot.refresh()
 
 func _on_battle_ended(result: String) -> void:
@@ -412,9 +427,9 @@ func _on_battle_ended(result: String) -> void:
 func _on_round_started(round_num: int) -> void:
 	_round_label.text = "TURN %d" % round_num
 
-func _refresh_skills(fighter: Fighter) -> void:
+func _refresh_skills(unit) -> void:
 	for c in _skill_bar.get_children(): c.queue_free()
-	for s in fighter.skills:
+	for s in unit.skills:
 		var btn = Button.new()
 		
 		# Suporte híbrido (Rule 15)
@@ -453,7 +468,7 @@ func _on_attack_pressed() -> void:
 
 func _on_skill_pressed(skill_id: String) -> void:
 	if engine.state != engine.BattleState.PLAYER_TURN: return
-	var active = engine.turn_queue.get_active_fighter()
+	var active = engine.turn_queue.get_active_Character()
 	if not active.is_skill_available(skill_id, engine.pt_manager.get_current()):
 		show_message("NOT ENOUGH PT / ON COOLDOWN")
 		return
@@ -464,13 +479,13 @@ func _start_targeting(skill_id: String) -> void:
 	targeting_mode = true
 	show_message("SELECT TARGET")
 	
-	var active = engine.turn_queue.get_active_fighter()
+	var active = engine.turn_queue.get_active_Character()
 	var skill = active.get_skill_by_id(skill_id)
 	
 	# Se for modular, usamos o Targeter para saber quem destacar
 	var valid = []
 	if skill is SkillResource:
-		valid = skill.targeter.get_targets(active, engine.player_fighters + engine.enemy_fighters)
+		valid = skill.targeter.get_targets(active, engine.player_Characters + engine.enemy_Characters)
 	else:
 		# Fallback legacy
 		var legacy_skill = {"id": skill_id, "aoe": "SINGLE"}
@@ -478,16 +493,16 @@ func _start_targeting(skill_id: String) -> void:
 		valid = engine.get_valid_targets(legacy_skill, active)
 	
 	for s in _player_slots + _enemy_slots:
-		s.set_targeting_visual(s.fighter in valid)
+		s.set_targeting_visual(s.unit in valid)
 
 func _clear_targeting_highlights() -> void:
 	for s in _player_slots + _enemy_slots:
 		s.set_targeting_visual(false)
 
-func _on_slot_clicked(slot: FighterSlotUI) -> void:
-	if not targeting_mode or not slot.fighter or not slot.fighter.is_alive: return
+func _on_slot_clicked(slot) -> void:
+	if not targeting_mode or not slot.unit or not slot.unit.is_alive: return
 	
-	var active = engine.turn_queue.get_active_fighter()
+	var active = engine.turn_queue.get_active_character()
 	if not active: return
 	
 	# Validação básica de alvo (Modular ou Legacy)
@@ -496,11 +511,11 @@ func _on_slot_clicked(slot: FighterSlotUI) -> void:
 	
 	# Note: A BattleEngine agora lida com a expansão do alvo (AOE) internamente
 	# via SkillResource.activate(), então passamos apenas o clicado como referência.
-	engine.use_skill(pending_skill, [slot.fighter])
+	engine.use_skill(pending_skill, [slot.unit])
 
-func _find_slot(fighter: Fighter) -> FighterSlotUI:
+func _find_slot(unit) :
 	for s in _player_slots + _enemy_slots:
-		if s.fighter == fighter: return s
+		if s.unit == unit: return s
 	return null
 
 var _msg_tween: Tween = null

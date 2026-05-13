@@ -10,7 +10,7 @@ extends Node
 var turn_queue: TurnQueue
 var pt_manager: PTManager
 var damage_calculator: DamageCalculator
-var enemy_ai: Node
+var enemy_ai: RefCounted
 
 # ─────────────────────────────────────────
 # ESTADO DA BATALHA
@@ -29,8 +29,8 @@ enum BattleState {
 
 var state: BattleState = BattleState.IDLE
 
-var player_fighters: Array = []   # Array[Fighter] — time do jogador (5)
-var enemy_fighters: Array = []    # Array[Fighter] — time inimigo (5)
+var player_characters: Array = []   # Array — time do jogador (5)
+var enemy_characters: Array = []    # Array — time inimigo (5)
 var player_formation: String = "1-3-1"
 var enemy_formation: String = "1-3-1"
 
@@ -45,13 +45,13 @@ var field_effects: Array = []     # Cartas de campo ativas
 # SINAIS (para a UI se conectar)
 # ─────────────────────────────────────────
 signal battle_started()
-signal turn_started(fighter: Fighter, is_player: bool)
+signal turn_started(unit, is_player: bool)
 signal pt_updated(current: int, maximum: int)
 signal hand_updated(hand: Array)
-signal damage_dealt(attacker: Fighter, defender: Fighter, result: Dictionary)
-signal fighter_died(fighter: Fighter)
+signal damage_dealt(attacker, defender, result: Dictionary)
+signal character_died(unit)
 signal battle_ended(result: String)   # "VICTORY" | "DEFEAT" | "DRAW"
-signal status_applied(fighter: Fighter, effect: Dictionary)
+signal status_applied(unit, effect: Dictionary)
 signal round_started(round_number: int)
 
 # ─────────────────────────────────────────
@@ -64,7 +64,6 @@ func _ready() -> void:
 
 	# Inicia IA dos Inimigos
 	enemy_ai = load("res://src/core/EnemyAI.gd").new()
-	add_child(enemy_ai)
 	enemy_ai.setup(self)
 
 	# Conecta sinais do PTManager para retransmitir à UI
@@ -97,27 +96,54 @@ func _auto_start_test() -> void:
 	start_battle()
 
 # ─────────────────────────────────────────
+# UTILITÁRIOS DE SANDBOX / TESTE (LEGO Rule 14)
+# ─────────────────────────────────────────
+func restart_battle() -> void:
+	print("[BattleEngine] Reiniciando batalha...")
+	# Reseta PT
+	pt_manager.reset()
+	# Reseta lutadores
+	for f in player_characters + enemy_characters:
+		f.hp = f.hp_max
+		f.is_alive = true
+		for s_id in f.cooldowns:
+			f.cooldowns[s_id] = 0
+	# Recomeça a fila
+	turn_queue.clear()
+	for f in player_characters + enemy_characters:
+		turn_queue.add_character(f)
+	
+	state = BattleState.IDLE
+	start_battle()
+
+func force_active_character(unit) -> void:
+	if unit and unit.is_alive:
+		# Define como o ativo e sinaliza para o HUD atualizar
+		turn_queue.active_character = unit
+		turn_started.emit(unit, player_characters.has(unit))
+
+# ─────────────────────────────────────────
 # DADOS DE TESTE
 # ─────────────────────────────────────────
-func _make_fighter(id: String, f_name: String, type: String, rarity: String,
+func _make_character(id: String, f_name: String, type: String, rarity: String,
 	hp: int, atk_f: int, def_f: int, atk_s: int, def_s: int, agi: int,
-	skills: Array) -> Fighter:
-	var fighter = Fighter.new()
-	fighter.id = id
-	fighter.display_name = f_name
-	fighter.fighter_type = type
-	fighter.rarity = rarity
-	fighter.hp_max = hp
-	fighter.atk_f = atk_f
-	fighter.def_f = def_f
-	fighter.atk_s = atk_s
-	fighter.def_s = def_s
-	fighter.agi = agi
-	fighter.skills = skills
-	return fighter
+	skills: Array) -> Resource:
+	var character_obj = unit.new()
+	character_obj.id = id
+	character_obj.display_name = f_name
+	character_obj.Character_type = type
+	character_obj.rarity = rarity
+	character_obj.hp_max_base = hp
+	character_obj.atk_f_base = atk_f
+	character_obj.def_f_base = def_f
+	character_obj.atk_s_base = atk_s
+	character_obj.def_s_base = def_s
+	character_obj.agi_base = agi
+	character_obj.skills = skills
+	return character_obj
 
 func _make_test_player_team() -> Array:
-	var ignis = _make_fighter("ignis","IGNIS","FIRE","RARE", 1840,210,155,90,80,130,
+	var ignis = _make_character("ignis","IGNIS","FIRE","RARE", 1840,210,155,90,80,130,
 			[{"id":"ignis_basic","name":"Ember Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"ignis_flame_wave","name":"Flame Wave","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.6,"aoe":"SINGLE","status":{"type":"BURN","turns":2,"value":55}},
 			 {"id":"ignis_inferno","name":"Inferno Burst","pt_cost":3,"cd":4,"damage_type":"SPECIAL","power":2.2,"aoe":"TOTAL","status":{"type":"BURN","turns":3,"value":80}}])
@@ -125,7 +151,7 @@ func _make_test_player_team() -> Array:
 	ignis.stars = 3
 	ignis.rank_type = "S"
 
-	var aether = _make_fighter("aetherion","AETHERION","LIGHT","MYTHIC", 3200,340,280,310,260,195,
+	var aether = _make_character("aetherion","AETHERION","LIGHT","MYTHIC", 3200,340,280,310,260,195,
 			[{"id":"aetherion_basic","name":"Divine Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"aetherion_flare","name":"Solar Flare","pt_cost":2,"cd":2,"damage_type":"SPECIAL","power":1.8,"aoe":"SINGLE","status":{"type":"BURN","turns":2,"value":90}},
 			 {"id":"aetherion_wrath","name":"Sovereign Wrath","pt_cost":4,"cd":5,"damage_type":"SPECIAL","power":3.5,"aoe":"TOTAL","status":{"type":"BURN","turns":3,"value":150}}])
@@ -134,10 +160,10 @@ func _make_test_player_team() -> Array:
 	aether.rank_type = "SSS"
 	
 	return [
-		_make_fighter("kael","KAEL","THUNDER","RARE", 1560,180,130,220,160,155,
+		_make_character("kael","KAEL","THUNDER","RARE", 1560,180,130,220,160,155,
 			[{"id":"kael_basic","name":"Spark Punch","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"kael_thunder","name":"Thunder Bolt","pt_cost":2,"cd":2,"damage_type":"SPECIAL","power":1.5,"aoe":"SINGLE","status":{"type":"OVERLOAD","turns":0,"value":0}}]),
-		_make_fighter("sapphira","SAPPHIRA","WATER","RARE", 1700,130,160,200,190,140,
+		_make_character("sapphira","SAPPHIRA","WATER","RARE", 1700,130,160,200,190,140,
 			[{"id":"sapphira_basic","name":"Water Slash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"sapphira_wave","name":"Tidal Wave","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.7,"aoe":"LINE","status":{"type":"EXTINGUISH","turns":2,"value":0}}]),
 		aether,
@@ -146,15 +172,15 @@ func _make_test_player_team() -> Array:
 
 func _make_test_enemy_team() -> Array:
 	return [
-		_make_fighter("orc_boss","ORC BOSS","FIGHTER","LEGENDARY", 2400,260,200,140,130,105,
+		_make_character("orc_boss","ORC BOSS","unit","LEGENDARY", 2400,260,200,140,130,105,
 			[{"id":"orc_basic","name":"Heavy Smash","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.2,"aoe":"SINGLE","status":{}},
 			 {"id":"orc_roar","name":"War Roar","pt_cost":2,"cd":3,"damage_type":"PHYSICAL","power":1.8,"aoe":"LINE","status":{}}]),
-		_make_fighter("goblin_a","GOBLIN A","GRASS","NORMAL", 1200,100,80,120,90,140,
+		_make_character("goblin_a","GOBLIN A","GRASS","NORMAL", 1200,100,80,120,90,140,
 			[{"id":"goblin_basic","name":"Stab","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}}]),
-		_make_fighter("shaman","SHAMAN","PSYCHIC","RARE", 1800,120,110,240,180,160,
+		_make_character("shaman","SHAMAN","PSYCHIC","RARE", 1800,120,110,240,180,160,
 			[{"id":"minder_basic","name":"Psy Blast","pt_cost":0,"cd":0,"damage_type":"SPECIAL","power":1.0,"aoe":"SINGLE","status":{}},
 			 {"id":"minder_confuse","name":"Confuse","pt_cost":2,"cd":3,"damage_type":"SPECIAL","power":1.2,"aoe":"SINGLE","status":{"type":"CONFUSE","turns":2,"value":0}}]),
-		_make_fighter("goblin_b","GOBLIN B","GRASS","NORMAL", 1000,100,80,120,90,140,
+		_make_character("goblin_b","GOBLIN B","GRASS","NORMAL", 1000,100,80,120,90,140,
 			[{"id":"goblin_basic","name":"Stab","pt_cost":0,"cd":0,"damage_type":"PHYSICAL","power":1.0,"aoe":"SINGLE","status":{}}]),
 	]
 
@@ -162,13 +188,13 @@ func _make_test_deck() -> Array:
 	var deck = []
 	var defs = [
 		{"id":"boost_fire","display_name":"Chama Ardente","card_type":"BOOST","pt_cost":2,"rarity":"RARE",
-		 "boost_fighter_type":"FIRE","boost_stat":"DAMAGE","boost_value":1.8,"boost_duration":0,"description":"+80% dano Fogo"},
+		 "boost_Character_type":"FIRE","boost_stat":"DAMAGE","boost_value":1.8,"boost_duration":0,"description":"+80% dano Fogo"},
 		{"id":"boost_any","display_name":"Impulso Universal","card_type":"BOOST","pt_cost":1,"rarity":"NORMAL",
-		 "boost_fighter_type":"ANY","boost_stat":"DAMAGE","boost_value":1.3,"boost_duration":0,"description":"+30% qualquer skill"},
+		 "boost_Character_type":"ANY","boost_stat":"DAMAGE","boost_value":1.3,"boost_duration":0,"description":"+30% qualquer skill"},
 		{"id":"heal_single","display_name":"Cura Sagrada","card_type":"HEAL","pt_cost":2,"rarity":"NORMAL",
 		 "heal_value":400,"heal_target":"SINGLE","description":"Restaura 400 HP"},
 		{"id":"boost_dragon","display_name":"Poder Dragão","card_type":"BOOST","pt_cost":2,"rarity":"RARE",
-		 "boost_fighter_type":"DRAGON","boost_stat":"DAMAGE","boost_value":1.7,"boost_duration":0,"description":"+70% dano Dragão"},
+		 "boost_Character_type":"DRAGON","boost_stat":"DAMAGE","boost_value":1.7,"boost_duration":0,"description":"+70% dano Dragão"},
 		{"id":"equip_sword","display_name":"Espada de Dragão","card_type":"EQUIPMENT","pt_cost":2,"rarity":"RARE",
 		 "equip_stat":"atk_f","equip_value":40,"description":"+40 ATK F"},
 		{"id":"heal_all","display_name":"Bênção Total","card_type":"HEAL","pt_cost":3,"rarity":"RARE",
@@ -179,15 +205,15 @@ func _make_test_deck() -> Array:
 	return deck
 
 func setup_battle(
-	p_fighters: Array,
-	e_fighters: Array,
+	p_Characters: Array,
+	e_Characters: Array,
 	p_deck: Array,
 	p_formation: String,
 	e_formation: String,
 	type_matrix: Dictionary
 ) -> void:
-	player_fighters = p_fighters
-	enemy_fighters = e_fighters
+	player_characters = p_Characters
+	enemy_characters = e_Characters
 	player_formation = p_formation
 	enemy_formation = e_formation
 	player_deck = p_deck.duplicate()
@@ -197,21 +223,21 @@ func setup_battle(
 	pt_manager.initialize()
 
 	# Inicializa todos os lutadores
-	for fighter in player_fighters + enemy_fighters:
-		fighter.initialize()
+	for unit in player_characters + enemy_characters:
+		unit.initialize()
 
 	# Atribui posições
-	for i in range(player_fighters.size()):
-		player_fighters[i].position = i
-	for i in range(enemy_fighters.size()):
-		enemy_fighters[i].position = i
+	for i in range(player_characters.size()):
+		player_characters[i].position = i
+	for i in range(enemy_characters.size()):
+		enemy_characters[i].position = i
 
 	# Compõe a mão inicial (5 cartas)
 	for i in range(5):
 		_draw_card()
 
 	# Monta a fila de turnos
-	turn_queue.initialize(player_fighters + enemy_fighters)
+	turn_queue.initialize(player_characters + enemy_characters)
 
 # ─────────────────────────────────────────
 # LOOP PRINCIPAL DE BATALHA
@@ -236,36 +262,36 @@ func _begin_next_turn() -> void:
 	# Pequena pausa dramática antes de iniciar o turno de alguém
 	await get_tree().create_timer(0.6).timeout
 
-	var active = turn_queue.get_active_fighter()
+	var active = turn_queue.get_active_character()
 	if active == null:
-		print("ERRO: Fighter ativo nulo na fila de turnos!")
+		print("ERRO ativo nulo na fila de turnos!")
 		return
 
-	print("Fighter ativo: ", active.display_name, " | Player? ", player_fighters.has(active))
+	print("unit ativo: ", active.display_name, " | Player? ", player_characters.has(active))
 
 	if not active.is_alive:
-		print("Fighter ", active.display_name, " morto. Pulando...")
+		print("unit ", active.display_name, " morto. Pulando...")
 		_advance_turn()
 		return
 
 	# PT refresh (apenas no turno do jogador por enquanto; inimigo tem lógica própria)
-	var is_player_turn = player_fighters.has(active)
+	var is_player_turn = player_characters.has(active)
 	if is_player_turn:
 		_start_player_turn(active)
 	else:
 		_start_enemy_turn(active)
 
-func _start_player_turn(fighter: Fighter) -> void:
+func _start_player_turn(unit) -> void:
 	pt_manager.on_turn_start(global_turn_counter)
 	_draw_card()
 	state = BattleState.PLAYER_TURN
 	print("State atualizado para: ", state)
-	emit_signal("turn_started", fighter, true)
+	emit_signal("turn_started", unit, true)
 
-func _start_enemy_turn(fighter: Fighter) -> void:
+func _start_enemy_turn(unit) -> void:
 	state = BattleState.ENEMY_TURN
 	print("State atualizado para: ", state)
-	emit_signal("turn_started", fighter, false)
+	emit_signal("turn_started", unit, false)
 	
 	# O inimigo 'pensa' por um instante antes de agir
 	await get_tree().create_timer(1.2).timeout
@@ -277,7 +303,7 @@ func _start_enemy_turn(fighter: Fighter) -> void:
 # ─────────────────────────────────────────
 
 # Jogador joga uma carta da mão (Boost, Heal, Equipment)
-func play_card(card_index: int, target_fighter: Fighter = null) -> bool:
+func play_card(card_index: int, target_character = null) -> bool:
 	if card_index >= player_hand.size():
 		return false
 	var card: Card = player_hand[card_index]
@@ -291,10 +317,10 @@ func play_card(card_index: int, target_fighter: Fighter = null) -> bool:
 		"BOOST":
 			active_boosts.append(card)
 		"HEAL":
-			_resolve_heal(card, target_fighter)
+			_resolve_heal(card, target_character)
 		"EQUIPMENT":
-			if target_fighter:
-				target_fighter.apply_equipment(card.to_dict())
+			if target_character:
+				target_character.apply_equipment(card.to_dict())
 		"FIELD":
 			_apply_field_effect(card)
 
@@ -304,12 +330,12 @@ func play_card(card_index: int, target_fighter: Fighter = null) -> bool:
 # Lutador (Jogador ou Inimigo) usa uma skill (ou ataque básico)
 func use_skill(skill_id: String, targets: Array) -> bool:
 	print("use_skill chamado: ", skill_id, " | targets: ", targets.size())
-	var active = turn_queue.get_active_fighter()
+	var active = turn_queue.get_active_character()
 	if active == null:
 		print("use_skill falhou: active é nulo!")
 		return false
 		
-	var is_player = player_fighters.has(active)
+	var is_player = player_characters.has(active)
 	var skill = active.get_skill_by_id(skill_id)
 	
 	if skill == null and skill_id != "basic":
@@ -345,7 +371,7 @@ func use_skill(skill_id: String, targets: Array) -> bool:
 		# Rule 12: Pipeline Modular
 		print("Executando SkillResource: ", skill.skill_name)
 		var selected = targets[0] if targets.size() > 0 else null
-		skill.activate(active, player_fighters + enemy_fighters, selected)
+		skill.activate(active, player_characters + enemy_characters, selected)
 	else:
 		# Legacy flow (Dicionário)
 		var boost_mult = _consume_boosts(active) if is_player else 1.0
@@ -359,7 +385,7 @@ func use_skill(skill_id: String, targets: Array) -> bool:
 # RESOLUÇÃO DE COMBATE
 # ─────────────────────────────────────────
 func _execute_attack(
-	attacker: Fighter,
+	attacker,
 	targets: Array,
 	skill: Dictionary,
 	boost_mult: float
@@ -370,7 +396,7 @@ func _execute_attack(
 		if not target.is_alive:
 			continue
 
-		var is_player_attacker = player_fighters.has(attacker)
+		var is_player_attacker = player_characters.has(attacker)
 		var formation = player_formation if is_player_attacker else enemy_formation
 		var damage_stat = "atk_s" if skill.get("damage_type", "PHYSICAL") == "SPECIAL" else "atk_f"
 		var formation_bonus = DamageCalculator.get_formation_bonus(
@@ -409,24 +435,24 @@ func _execute_attack(
 		# Verifica morte
 		if not target.is_alive:
 			print("enemy defeated: ", target.display_name)
-			emit_signal("fighter_died", target)
+			emit_signal("character_died", target)
 
 	# Verifica vitória após resolução
 	if _check_battle_end():
 		return
 
-func _resolve_heal(card: Card, target: Fighter) -> void:
+func _resolve_heal(card: Card, target) -> void:
 	if target == null:
 		return
 	match card.heal_target:
 		"SINGLE":
 			target.heal(card.heal_value)
 		"ALL":
-			for f in player_fighters:
+			for f in player_characters:
 				if f.is_alive:
 					f.heal(card.heal_value)
 		"LOWEST_HP":
-			var lowest = _get_lowest_hp_fighter(player_fighters)
+			var lowest = _get_lowest_hp_character(player_characters)
 			if lowest:
 				lowest.heal(card.heal_value)
 
@@ -445,13 +471,13 @@ func skip_turn() -> void:
 	_end_turn()
 
 func _end_turn() -> void:
-	var active = turn_queue.get_active_fighter()
+	var active = turn_queue.get_active_character()
 	if not active:
-		print("ERRO em _end_turn: Nenhum fighter ativo. Forçando avanço de turno.")
+		print("ERRO em _end_turn: Nenhum unit ativo. Forçando avanço de turno.")
 		_advance_turn()
 		return
 		
-	var is_player = player_fighters.has(active)
+	var is_player = player_characters.has(active)
 	
 	if is_player:
 		pt_manager.on_turn_end()
@@ -474,7 +500,7 @@ func _end_turn() -> void:
 			emit_signal("damage_dealt", active, active, result)
 			if not active.is_alive:
 				print("enemy defeated: ", active.display_name)
-				emit_signal("fighter_died", active)
+				emit_signal("character_died", active)
 				if _check_battle_end():
 					return
 
@@ -499,8 +525,8 @@ func _begin_new_round() -> void:
 		field_effects.erase(e)
 
 	# Reconstrói a fila com AGIs atualizadas
-	var all_alive = player_fighters.filter(func(f): return f.is_alive) + \
-				   enemy_fighters.filter(func(f): return f.is_alive)
+	var all_alive = player_characters.filter(func(f): return f.is_alive) + \
+				   enemy_characters.filter(func(f): return f.is_alive)
 	turn_queue.start_new_round(all_alive)
 	emit_signal("round_started", turn_queue.get_round_number())
 	_begin_next_turn()
@@ -518,12 +544,12 @@ func _draw_card() -> void:
 # ─────────────────────────────────────────
 # BOOSTS
 # ─────────────────────────────────────────
-func _consume_boosts(attacker: Fighter) -> float:
+func _consume_boosts(attacker) -> float:
 	var multiplier = 1.0
 	var consumed = []
 	for boost in active_boosts:
-		if boost.applies_to_fighter(attacker.fighter_type):
-			multiplier *= boost.get_boost_multiplier(attacker.fighter_type)
+		if boost.applies_to_character(attacker.Character_type):
+			multiplier *= boost.get_boost_multiplier(attacker.Character_type)
 			consumed.append(boost)
 	for b in consumed:
 		active_boosts.erase(b)
@@ -533,8 +559,8 @@ func _consume_boosts(attacker: Fighter) -> float:
 # VITÓRIA / DERROTA
 # ─────────────────────────────────────────
 func _check_battle_end() -> bool:
-	var player_alive = player_fighters.any(func(f): return f.is_alive)
-	var enemy_alive = enemy_fighters.any(func(f): return f.is_alive)
+	var player_alive = player_characters.any(func(f): return f.is_alive)
+	var enemy_alive = enemy_characters.any(func(f): return f.is_alive)
 
 	if not player_alive and not enemy_alive:
 		state = BattleState.DRAW
@@ -557,18 +583,18 @@ func _check_battle_end() -> bool:
 # ─────────────────────────────────────────
 # UTILITÁRIOS
 # ─────────────────────────────────────────
-func _get_lowest_hp_fighter(fighters: Array) -> Fighter:
-	var lowest: Fighter = null
-	for f in fighters:
+func _get_lowest_hp_character(Characters: Array) -> Resource:
+	var lowest = null
+	for f in Characters:
 		if f.is_alive:
 			if lowest == null or f.hp < lowest.hp:
 				lowest = f
 	return lowest
 
-func get_valid_targets(skill: Dictionary, attacker: Fighter) -> Array:
+func get_valid_targets(skill: Dictionary, attacker) -> Array:
 	var aoe = skill.get("aoe", "SINGLE")
-	var is_player = player_fighters.has(attacker)
-	var enemies = enemy_fighters if is_player else player_fighters
+	var is_player = player_characters.has(attacker)
+	var enemies = enemy_characters if is_player else player_characters
 
 	match aoe:
 		"SINGLE":

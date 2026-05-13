@@ -7,11 +7,11 @@ extends RefCounted
 # ─────────────────────────────────────────
 # ESTADO
 # ─────────────────────────────────────────
-var _queue: Array = []          # Array de Fighter ordenado por AGI desc
+var _queue: Array = []          # Array de unit ordenado por AGI desc
 var _current_index: int = 0
 var _round_number: int = 0
 
-signal turn_started(fighter: Fighter)
+signal turn_started(unit)
 signal round_started(round_number: int)
 
 # ─────────────────────────────────────────
@@ -19,24 +19,24 @@ signal round_started(round_number: int)
 # ─────────────────────────────────────────
 
 # Recebe os 10 lutadores (5 aliados + 5 inimigos) e monta a fila inicial
-func initialize(all_fighters: Array) -> void:
+func initialize(all_characters: Array) -> void:
 	_round_number = 0
 	_current_index = 0
-	_rebuild_queue(all_fighters)
+	_rebuild_queue(all_characters)
 
 # ─────────────────────────────────────────
 # CONTROLE DE RODADA
 # ─────────────────────────────────────────
 
 # Chamado ao fim de cada rodada completa — reconstrói a fila com AGIs atualizadas
-func start_new_round(all_fighters: Array) -> void:
+func start_new_round(all_characters: Array) -> void:
 	_round_number += 1
 	_current_index = 0
-	_rebuild_queue(all_fighters)
+	_rebuild_queue(all_characters)
 	emit_signal("round_started", _round_number)
 
 # Retorna o lutador do turno atual
-func get_active_fighter() -> Fighter:
+func get_active_character() -> Resource:
 	if _queue.is_empty():
 		return null
 	return _queue[_current_index]
@@ -59,9 +59,9 @@ func is_round_over() -> bool:
 # INTERNOS
 # ─────────────────────────────────────────
 
-func _rebuild_queue(all_fighters: Array) -> void:
+func _rebuild_queue(all_characters: Array) -> void:
 	# Filtra apenas lutadores vivos
-	var alive = all_fighters.filter(func(f): return f.is_alive)
+	var alive = all_characters.filter(func(f): return f.is_alive)
 
 	# Ordena por AGI efetiva (decrescente)
 	# Empate: posição menor age primeiro (Líder de formação priorizado)

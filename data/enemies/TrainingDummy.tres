@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Character" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/physical/BasicStrike.tres" id="1_skill"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+id = "training_dummy"
+display_name = "Training Dummy"
+fighter_type = "NEUTRAL"
+rarity = "NORMAL"
+portrait_path = "res://assets/cards/enemies/dummy.png"
+level = 1
+stars = 1
+rank_type = "D"
+hp_max_base = 5000
+atk_f_base = 50
+def_f_base = 200
+atk_s_base = 50
+def_s_base = 200
+agi_base = 10
+skills = [ExtResource("1_skill")]
+passive = {}
+leadership = {}

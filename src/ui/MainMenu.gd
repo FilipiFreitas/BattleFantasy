@@ -30,16 +30,23 @@ func _build_ui() -> void:
 	
 	# Botões
 	var btn_heroes = _create_menu_button("HERÓIS")
+	var btn_skill_test = _create_menu_button("SKILL TEST")
 	var btn_battle = _create_menu_button("BATALHA")
 	var btn_options = _create_menu_button("OPÇÕES")
 	
 	menu.add_child(btn_heroes)
+	menu.add_child(btn_skill_test)
 	menu.add_child(btn_battle)
 	menu.add_child(btn_options)
 	
 	# Ações
 	btn_battle.pressed.connect(_on_battle_pressed)
+	btn_skill_test.pressed.connect(_on_skill_test_pressed)
 	btn_options.pressed.connect(_show_options)
+
+func _on_skill_test_pressed() -> void:
+	# Carrega a cena de batalha, mas com o coordenador de teste injetado
+	get_tree().change_scene_to_file("res://src/scenes/SkillTest/SkillTestScreen.tscn")
 
 func _create_menu_button(txt: String) -> Button:
 	var btn = Button.new()

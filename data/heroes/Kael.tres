@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Character" load_steps=6 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/thunder/Spark.tres" id="1_basic"]
+[ext_resource type="Resource" path="res://data/skills/dark/PoisonArrow.tres" id="2_s1"]
+[ext_resource type="Resource" path="res://data/skills/physical/Slash.tres" id="3_s2"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="4_script"]
+
+[resource]
+script = ExtResource("4_script")
+id = "kael"
+display_name = "Kael"
+fighter_type = "THUNDER"
+rarity = "RARE"
+portrait_path = "res://assets/cards/heroes/kael.png"
+level = 25
+stars = 3
+rank_type = "A"
+hp_max_base = 1600
+atk_f_base = 180
+def_f_base = 130
+atk_s_base = 220
+def_s_base = 160
+agi_base = 150
+basic_attack = ExtResource("1_basic")
+skill_1 = ExtResource("2_s1")
+skill_2 = ExtResource("3_s2")

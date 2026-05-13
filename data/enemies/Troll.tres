@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Character" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/physical/Punch.tres" id="1_basic"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+id = "troll"
+display_name = "Troll"
+fighter_type = "EARTH"
+rarity = "RARE"
+portrait_path = "res://assets/cards/enemies/troll.png"
+level = 20
+stars = 3
+rank_type = "B"
+hp_max_base = 3500
+atk_f_base = 300
+def_f_base = 250
+atk_s_base = 50
+def_s_base = 150
+agi_base = 80
+basic_attack = ExtResource("1_basic")

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://p7txtsg1bx7p"
-path="res://.godot/imported/aetherion.png-b169a2c8180d7ffd55f9c676f9396d75.ctex"
+uid="uid://dptxop6otahnh"
+path="res://.godot/imported/screen.png-86ada853161637b005490c21608ab55d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/cards/fighters/aetherion.png"
-dest_files=["res://.godot/imported/aetherion.png-b169a2c8180d7ffd55f9c676f9396d75.ctex"]
+source_file="res://assets/cards/heroes/screen.png"
+dest_files=["res://.godot/imported/screen.png-86ada853161637b005490c21608ab55d.ctex"]
 
 [params]
 

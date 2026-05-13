@@ -11,17 +11,17 @@ A carta é composta por **7 camadas** empilhadas de baixo para cima:
 
 ```
 ┌─────────────────────────────┐
-│  ░░░ GLOW EXTERNO ░░░░░░░  │ ← Camada 7 (Shader no Godot)
+│  ░░░ GLOW EXTERNO ░░░░░░░   │ ← Camada 7 (Shader no Godot)
 │  ┌───────────────────────┐  │
-│  │ [⚡]            [A]   │  │ ← Camada 6: Elemento + Rank
+│  │ [⚡]            [A]  │  │ ← Camada 6: Elemento + Rank
 │  │                       │  │
 │  │                       │  │
 │  │    ARTE DO HERÓI      │  │ ← Camada 1: PNG externo
 │  │                       │  │
 │  │                       │  │
-│  │  ★ ★ ★ ★ ★            │  │ ← Camada 5: Estrelas (Godot)
+│  │  ★ ★ ★ ★ ★         │  │ ← Camada 5: Estrelas (Godot)
 │  │  Kael - Lv 45         │  │ ← Camada 4: Nome + Level (Godot)
-│  │  ████████░░░░  HP Bar  │  │ ← Camada 3: Barra de HP (Godot)
+│  │  ████████░░░░  HP Bar │  │ ← Camada 3: Barra de HP (Godot)
 │  │  HP: 980    ATK: 310  │  │ ← Camada 2: Stats (Godot)
 │  └───────────────────────┘  │ ← Moldura/Frame: PNG externo
 └─────────────────────────────┘

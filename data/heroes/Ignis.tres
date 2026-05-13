@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Character" load_steps=5 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/fire/Ember.tres" id="1_basic"]
+[ext_resource type="Resource" path="res://data/skills/light/HealWave.tres" id="2_s1"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="3_script"]
+
+[resource]
+script = ExtResource("3_script")
+id = "ignis"
+display_name = "Ignis"
+fighter_type = "FIRE"
+rarity = "RARE"
+portrait_path = "res://assets/cards/heroes/ignis.png"
+level = 30
+stars = 4
+rank_type = "S"
+hp_max_base = 2100
+atk_f_base = 250
+def_f_base = 180
+atk_s_base = 150
+def_s_base = 140
+agi_base = 140
+basic_attack = ExtResource("1_basic")
+skill_1 = ExtResource("2_s1")

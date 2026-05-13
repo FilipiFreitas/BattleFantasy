@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Character" load_steps=3 format=3]
+
+[ext_resource type="Resource" path="res://data/skills/physical/ArrowShot.tres" id="1_basic"]
+[ext_resource type="Script" path="res://src/entities/Character.gd" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+id = "goblin_archer"
+display_name = "Goblin Rastreador"
+fighter_type = "WIND"
+rarity = "NORMAL"
+portrait_path = "res://assets/cards/enemies/goblin_archer.png"
+level = 12
+stars = 2
+rank_type = "C"
+hp_max_base = 500
+atk_f_base = 140
+def_f_base = 70
+atk_s_base = 100
+def_s_base = 60
+agi_base = 135
+basic_attack = ExtResource("1_basic")

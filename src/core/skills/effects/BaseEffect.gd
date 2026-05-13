@@ -4,8 +4,8 @@ extends Resource
 
 ## Sinal emitido quando o efeito é aplicado (Rule 7/10: Visual separado da lógica)
 ## A HUD/VFX vai escutar isso para tocar sons ou spawnar partículas.
-signal effect_applied(target: Fighter, value: Variant)
+signal effect_applied(target, value: Variant)
 
 ## Método principal que cada efeito deve implementar.
-func execute(user: Fighter, target: Fighter):
+func execute(_user, _target):
 	pass

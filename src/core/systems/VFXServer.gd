@@ -3,13 +3,13 @@
 extends Node
 
 ## Sinal emitido quando um efeito de dano acontece
-signal damage_vfx_requested(target: Fighter, amount: int, element: String)
+signal damage_vfx_requested(target: unit, amount: int, element: String)
 
 ## Sinal emitido quando uma habilidade inicia
-signal skill_vfx_requested(user: Fighter, targets: Array, skill_name: String)
+signal skill_vfx_requested(user: unit, targets: Array, skill_name: String)
 
-func request_damage_vfx(target: Fighter, amount: int, element: String = "physical"):
+func request_damage_vfx(target: unit, amount: int, element: String = "physical"):
 	damage_vfx_requested.emit(target, amount, element)
 
-func request_skill_vfx(user: Fighter, targets: Array, skill_name: String):
+func request_skill_vfx(user: unit, targets: Array, skill_name: String):
 	skill_vfx_requested.emit(user, targets, skill_name)

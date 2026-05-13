@@ -10,8 +10,8 @@ enum Side { ENEMIES, ALLIES, BOTH }
 
 ## Retorna os lutadores que serão afetados pela habilidade.
 ## selected_target: O lutador que o jogador clicou (opcional para IA/AOE Total).
-func get_targets(user: Fighter, all_fighters: Array, selected_target: Fighter = null) -> Array[Fighter]:
-	var potential_targets: Array[Fighter] = []
+func get_targets(user, all_fighters: Array, selected_target = null) -> Array:
+	var potential_targets: Array = []
 	
 	for f in all_fighters:
 		if not f.is_alive: continue

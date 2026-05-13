@@ -9,7 +9,7 @@ func _init():
 ## Sobrescreve para lógica específica se necessário. 
 ## Por padrão, o BaseTargeter já faz um filtro grosso.
 ## Aqui poderíamos adicionar lógica de 'mais vida', 'mais perto', etc.
-func get_targets(user: Fighter, all_fighters: Array, selected_target: Fighter = null) -> Array[Fighter]:
+func get_targets(user, all_fighters: Array, selected_target = null) -> Array:
 	var potential = super.get_targets(user, all_fighters, selected_target)
 	
 	if potential.size() > 0:

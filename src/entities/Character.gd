@@ -1,7 +1,6 @@
-# Fighter.gd
-# Representa um lutador no campo de batalha.
-# Contém todos os atributos base, estado de batalha, skills e efeitos de status.
-class_name Fighter
+# Character.gd
+# Representa um personagem (Herói, Inimigo ou Boss) no campo de batalha.
+class_name Character
 extends Resource
 
 # ─────────────────────────────────────────
@@ -9,26 +8,58 @@ extends Resource
 # ─────────────────────────────────────────
 @export var id: String = ""
 @export var display_name: String = ""
-@export var fighter_type: String = ""   # "FIRE" | "WATER" | "DRAGON" | etc.
-@export var rarity: String = "NORMAL"   # "NORMAL" | "RARE" | "LEGENDARY" | "MYTHIC"
+@export_enum("PHYSICAL", "FIRE", "WATER", "WIND", "EARTH", "THUNDER", "LIGHT", "DARK", "MAGIC", "DRAGON", "NEUTRAL") var fighter_type: String = "NEUTRAL"
+@export_enum("NORMAL", "RARE", "LEGENDARY", "MYTHIC") var rarity: String = "NORMAL"
 @export var portrait_path: String = ""  # Caminho para sprite da carta
 @export var level: int = 1
 @export var stars: int = 1               # 1 a 6 estrelas
-@export var rank_type: String = "D"      # D, C, B, A, S, SS, SSS
+@export_enum("D", "C", "B", "A", "S", "SS", "SSS") var rank_type: String = "D"
 
 # ─────────────────────────────────────────
-# ATRIBUTOS BASE
+# ATRIBUTOS BASE (NÍVEL 1)
 # ─────────────────────────────────────────
-@export var hp_max: int = 1000
-@export var atk_f: int = 100   # Ataque Físico
-@export var def_f: int = 80    # Defesa Física
-@export var atk_s: int = 100   # Ataque Especial
-@export var def_s: int = 80    # Defesa Especial
-@export var agi: int = 100     # Agilidade (define ordem na TurnQueue)
+@export_group("Atributos Base (Lv 1)")
+@export var hp_max_base: int = 1000
+@export var atk_f_base: int = 100
+@export var def_f_base: int = 80
+@export var atk_s_base: int = 100
+@export var def_s_base: int = 80
+@export var agi_base: int = 100
 
 # ─────────────────────────────────────────
-# ESTADO DE BATALHA (mutável durante a luta)
+# CRESCIMENTO (POR NÍVEL)
 # ─────────────────────────────────────────
+@export_group("Crescimento por Nível")
+@export var hp_growth: int = 50
+@export var atk_f_growth: int = 5
+@export var def_f_growth: int = 4
+@export var atk_s_growth: int = 5
+@export var def_s_growth: int = 4
+@export var agi_growth: int = 1
+
+# ─────────────────────────────────────────
+# HABILIDADES (Regra 1 + 3 + 1)
+# ─────────────────────────────────────────
+@export_group("Habilidades")
+@export var basic_attack: SkillResource
+@export var skill_1: SkillResource
+@export var skill_2: SkillResource
+@export var skill_3: SkillResource
+@export var extra_skill: SkillResource # Slot de Equipamento
+
+# Lista interna consolidada para o motor de batalha
+var skills: Array = []
+
+# ─────────────────────────────────────────
+# ESTADO DE BATALHA (Calculado no initialize)
+# ─────────────────────────────────────────
+var hp_max: int = 0
+var atk_f: int = 0
+var def_f: int = 0
+var atk_s: int = 0
+var def_s: int = 0
+var agi: int = 0
+
 var hp: int = 0
 var position: int = 0            # Índice 0-4 na formação
 var is_alive: bool = true
@@ -40,25 +71,34 @@ var equipment_buffs: Dictionary = {
 }
 
 # ─────────────────────────────────────────
-# HABILIDADES (built-in — não vêm do deck)
-# ─────────────────────────────────────────
-@export var skills: Array = [] # Pode conter Dictionary (Legacy) ou SkillResource (New)
-
-@export var passive: Dictionary = {}
-@export var leadership: Dictionary = {}
-
-# ─────────────────────────────────────────
 # INICIALIZAÇÃO
 # ─────────────────────────────────────────
 func initialize() -> void:
+	# Cálculo de Atributos por Nível (LEGO Rule 15: Progressão Dinâmica)
+	var level_factor = level - 1
+	hp_max = hp_max_base + (hp_growth * level_factor)
+	atk_f = atk_f_base + (atk_f_growth * level_factor)
+	def_f = def_f_base + (def_f_growth * level_factor)
+	atk_s = atk_s_base + (atk_s_growth * level_factor)
+	def_s = def_s_base + (def_s_growth * level_factor)
+	agi = agi_base + (agi_growth * level_factor)
+
 	hp = hp_max
+	is_alive = true
 	cooldowns = {}
 	status_effects = []
 	active_boosts = []
 	equipment_buffs = { "atk_f": 0, "def_f": 0, "atk_s": 0, "def_s": 0, "agi": 0 }
-	is_alive = true
 	
-	# Inicializa cooldowns para ambos os formatos
+	# Consolida as habilidades dos slots na lista única de execução
+	skills = []
+	if basic_attack: skills.append(basic_attack)
+	if skill_1: skills.append(skill_1)
+	if skill_2: skills.append(skill_2)
+	if skill_3: skills.append(skill_3)
+	if extra_skill: skills.append(extra_skill)
+	
+	# Inicializa cooldowns
 	for skill in skills:
 		var s_id = _get_skill_id(skill)
 		if s_id != "":
@@ -112,12 +152,12 @@ func _get_skill_id(skill: Variant) -> String:
 
 func _get_skill_pt_cost(skill: Variant) -> int:
 	if skill is Dictionary: return skill.get("pt_cost", 0)
-	# SkillResource pode ter seu próprio sistema de custo
+	if skill is SkillResource: return skill.pt_cost
 	return 0 
 
 func _get_skill_cd(skill: Variant) -> int:
 	if skill is Dictionary: return skill.get("cd", 0)
-	# Adicionaremos cd ao SkillResource em breve
+	if skill is SkillResource: return skill.cooldown
 	return 0
 
 # ─────────────────────────────────────────

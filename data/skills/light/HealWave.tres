@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SkillResource" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/core/skills/effects/HealEffect.gd" id="1_heal"]
+[ext_resource type="Script" path="res://src/core/skills/targeters/AreaTargeter.gd" id="2_target"]
+[ext_resource type="Script" path="res://src/core/skills/SkillResource.gd" id="3_skill"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("1_heal")
+heal_amount = 40
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_target")
+area_pattern = 0
+target_type = 1
+target_side = 1
+
+[resource]
+script = ExtResource("3_skill")
+skill_name = "Onda de Cura"
+description = "Restaura o HP de todos os aliados vivos."
+targeter = SubResource("Resource_2")
+effects = Array[Resource("res://src/core/skills/effects/BaseEffect.gd")]([SubResource("Resource_1")])

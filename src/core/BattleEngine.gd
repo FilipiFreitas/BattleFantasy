@@ -233,6 +233,9 @@ func _begin_next_turn() -> void:
 		print("Batalha já encerrou, ignorando turno.")
 		return
 
+	# Pequena pausa dramática antes de iniciar o turno de alguém
+	await get_tree().create_timer(0.6).timeout
+
 	var active = turn_queue.get_active_fighter()
 	if active == null:
 		print("ERRO: Fighter ativo nulo na fila de turnos!")
@@ -263,6 +266,11 @@ func _start_enemy_turn(fighter: Fighter) -> void:
 	state = BattleState.ENEMY_TURN
 	print("State atualizado para: ", state)
 	emit_signal("turn_started", fighter, false)
+	
+	# O inimigo 'pensa' por um instante antes de agir
+	await get_tree().create_timer(1.2).timeout
+	# Nota: O EnemyAI.gd já está conectado ao sinal turn_started,
+	# então ele agirá automaticamente. Não precisamos chamar nada aqui.
 
 # ─────────────────────────────────────────
 # AÇÕES DO JOGADOR
@@ -302,32 +310,48 @@ func use_skill(skill_id: String, targets: Array) -> bool:
 		return false
 		
 	var is_player = player_fighters.has(active)
+	var skill = active.get_skill_by_id(skill_id)
+	
+	if skill == null and skill_id != "basic":
+		print("use_skill falhou: skill %s não encontrada!" % skill_id)
+		return false
 
-	# Ataque básico (skill_id = "basic")
+	# Ataque básico (Legacy flow por enquanto)
 	if skill_id == "basic":
 		_execute_attack(active, targets, {}, _consume_boosts(active) if is_player else 1.0)
-		print("use_skill finalizado. Sucesso? true (basic)")
+		await get_tree().create_timer(1.2).timeout 
 		_end_turn()
 		return true
 
-	# Skill específica
-	var skill = active.get_skill_by_id(skill_id)
-	if skill.is_empty():
-		print("use_skill falhou: skill não encontrada!")
+	# Verificação de disponibilidade (PT e CD)
+	if not active.is_skill_available(skill_id, pt_manager.get_current()): 
+		print("use_skill falhou: skill indisponível.")
 		return false
-	
+
+	# Consumo de PT
 	if is_player:
-		if not active.is_skill_available(skill_id, pt_manager.get_current()): 
-			print("use_skill falhou: skill indisponível (PT ou CD).")
-			return false
-		pt_manager.spend(skill["pt_cost"])
+		var cost = active._get_skill_pt_cost(skill)
+		pt_manager.spend(cost)
 		
 	active.activate_cooldown(skill_id)
 
-	var boost_mult = _consume_boosts(active) if is_player else 1.0
-	_execute_attack(active, targets, skill, boost_mult)
+	# EXECUÇÃO (Pipeline Modular ou Legacy)
+	if skill is SkillResource:
+		# Rule 7: Conecta o visual (HUD) aos sinais da lógica (Skill/Effects)
+		var hud = get_node_or_null("HUD")
+		if hud and hud.has_method("register_skill_signals"):
+			hud.register_skill_signals(skill)
+			
+		# Rule 12: Pipeline Modular
+		print("Executando SkillResource: ", skill.skill_name)
+		var selected = targets[0] if targets.size() > 0 else null
+		skill.activate(active, player_fighters + enemy_fighters, selected)
+	else:
+		# Legacy flow (Dicionário)
+		var boost_mult = _consume_boosts(active) if is_player else 1.0
+		_execute_attack(active, targets, skill, boost_mult)
 	
-	print("use_skill finalizado. Sucesso? true (special)")
+	await get_tree().create_timer(1.2).timeout # Pacing (Rule 11)
 	_end_turn()
 	return true
 
@@ -360,6 +384,8 @@ func _execute_attack(
 			"boost_multiplier": boost_mult,
 			"formation_bonus": formation_bonus,
 		})
+		result["skill_name"] = skill.get("name", "ATTACK") if not skill.is_empty() else "ATTACK"
+
 
 		# Aplica dano
 		var actual_dmg = target.take_damage(result["damage"])

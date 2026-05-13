@@ -42,25 +42,10 @@ var equipment_buffs: Dictionary = {
 # ─────────────────────────────────────────
 # HABILIDADES (built-in — não vêm do deck)
 # ─────────────────────────────────────────
-@export var skills: Array = []
-# Formato de cada skill:
-# {
-#   "id": "ignis_flame_wave",
-#   "name": "Flame Wave",
-#   "pt_cost": 2,
-#   "cd": 3,
-#   "type": "FIRE",
-#   "damage_type": "SPECIAL",   # "PHYSICAL" | "SPECIAL"
-#   "power": 1.4,               # Multiplicador do ATK base
-#   "aoe": "SINGLE",            # "SINGLE" | "LINE" | "CROSS" | "TOTAL"
-#   "status": { "type": "BURN", "turns": 2, "value": 50 }
-# }
+@export var skills: Array = [] # Pode conter Dictionary (Legacy) ou SkillResource (New)
 
 @export var passive: Dictionary = {}
-# Formato: { "id": "...", "description": "...", "effect_type": "...", "value": ... }
-
 @export var leadership: Dictionary = {}
-# Exclusivo Míticas. Ativo quando na posição de Líder da formação.
 
 # ─────────────────────────────────────────
 # INICIALIZAÇÃO
@@ -72,8 +57,12 @@ func initialize() -> void:
 	active_boosts = []
 	equipment_buffs = { "atk_f": 0, "def_f": 0, "atk_s": 0, "def_s": 0, "agi": 0 }
 	is_alive = true
+	
+	# Inicializa cooldowns para ambos os formatos
 	for skill in skills:
-		cooldowns[skill["id"]] = 0
+		var s_id = _get_skill_id(skill)
+		if s_id != "":
+			cooldowns[s_id] = 0
 
 # ─────────────────────────────────────────
 # ATRIBUTOS EFETIVOS (base + buffs de equipamento)
@@ -114,29 +103,49 @@ func heal(amount: int) -> int:
 	return actual
 
 # ─────────────────────────────────────────
+# HELPER PRIVADO (Modularização)
+# ─────────────────────────────────────────
+func _get_skill_id(skill: Variant) -> String:
+	if skill is Dictionary: return skill.get("id", "")
+	if skill is SkillResource: return skill.skill_name.to_snake_case()
+	return ""
+
+func _get_skill_pt_cost(skill: Variant) -> int:
+	if skill is Dictionary: return skill.get("pt_cost", 0)
+	# SkillResource pode ter seu próprio sistema de custo
+	return 0 
+
+func _get_skill_cd(skill: Variant) -> int:
+	if skill is Dictionary: return skill.get("cd", 0)
+	# Adicionaremos cd ao SkillResource em breve
+	return 0
+
+# ─────────────────────────────────────────
 # SKILLS — VERIFICAÇÕES
 # ─────────────────────────────────────────
 func is_skill_available(skill_id: String, current_pt: int) -> bool:
 	var skill = get_skill_by_id(skill_id)
-	if skill.is_empty():
-		return false
+	if skill == null: return false
+	
 	var cd = cooldowns.get(skill_id, 0)
-	if cd > 0:
-		return false
-	if skill["pt_cost"] > current_pt:
-		return false
+	if cd > 0: return false
+	
+	var cost = _get_skill_pt_cost(skill)
+	if cost > current_pt: return false
+	
 	return true
 
-func get_skill_by_id(skill_id: String) -> Dictionary:
+func get_skill_by_id(skill_id: String) -> Variant:
 	for skill in skills:
-		if skill["id"] == skill_id:
+		if _get_skill_id(skill) == skill_id:
 			return skill
-	return {}
+	return null
 
 func get_available_skills(current_pt: int) -> Array:
 	var available = []
 	for skill in skills:
-		if is_skill_available(skill["id"], current_pt):
+		var s_id = _get_skill_id(skill)
+		if is_skill_available(s_id, current_pt):
 			available.append(skill)
 	return available
 
@@ -145,8 +154,8 @@ func get_available_skills(current_pt: int) -> Array:
 # ─────────────────────────────────────────
 func activate_cooldown(skill_id: String) -> void:
 	var skill = get_skill_by_id(skill_id)
-	if not skill.is_empty():
-		cooldowns[skill_id] = skill["cd"]
+	if skill:
+		cooldowns[skill_id] = _get_skill_cd(skill)
 
 func tick_cooldowns() -> void:
 	for skill_id in cooldowns:

@@ -1,1 +1,9 @@
 res://src/ui/BattleHUD.gd
+res://src/ui/components/HeroCard.gd
+res://src/ui/FighterSlotUI.gd
+res://src/scenes/Battle/BattleCoordinator.gd
+res://src/core/BattleEngine.gd
+res://src/core/EnemyAI.gd
+res://src/entities/Fighter.gd
+res://src/core/skills/targeters/BaseTargeter.gd
+res://src/core/skills/targeters/SingleEnemyTargeter.gd

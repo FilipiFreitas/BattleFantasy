@@ -147,12 +147,12 @@ func _create_test_deck() -> Array:
 # ─────────────────────────────────────────
 # HELPER
 # ─────────────────────────────────────────
-func _make_fighter(id: String, name: String, type: String, rarity: String,
+func _make_fighter(id: String, f_name: String, type: String, rarity: String,
 	hp: int, atk_f: int, def_f: int, atk_s: int, def_s: int, agi: int,
 	skills: Array) -> Fighter:
 	var f = Fighter.new()
 	f.id = id
-	f.display_name = name
+	f.display_name = f_name
 	f.fighter_type = type
 	f.rarity = rarity
 	f.hp_max = hp

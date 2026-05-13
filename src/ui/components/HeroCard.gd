@@ -23,6 +23,7 @@ func _build_fallback_ui() -> void:
 	var bg = ColorRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.color = _get_element_color()
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 	
 	# Borda Nítida
@@ -31,6 +32,7 @@ func _build_fallback_ui() -> void:
 	border.border_color = Color.WHITE
 	border.border_width = 4.0
 	border.editor_only = false
+	border.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(border)
 	
 	# Nome do Herói
@@ -43,7 +45,8 @@ func _build_fallback_ui() -> void:
 		lbl.add_theme_font_size_override("font_size", 14)
 		lbl.add_theme_color_override("font_outline_color", Color.BLACK)
 		lbl.add_theme_constant_override("outline_size", 4)
-		add_child(lbl)
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(lbl)																																																
 		
 		# Tipo do elemento (topo)
 		var type_lbl = Label.new()
@@ -52,6 +55,7 @@ func _build_fallback_ui() -> void:
 		type_lbl.add_theme_font_size_override("font_size", 10)
 		type_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
 		type_lbl.add_theme_constant_override("outline_size", 3)
+		type_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(type_lbl)
 
 func _get_element_color() -> Color:
